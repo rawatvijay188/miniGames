@@ -1,5 +1,9 @@
-# Neon Reels
+# Game Hub
 
-A self-contained browser slot game with animated reels, betting controls, a paytable, balance tracking, and optional sound.
+A self-contained browser arcade hub with multiple playable games.
 
-Open `index.html` in a browser to play.
+Open `index.html` in a browser, then choose a game:
+
+- Neon Reels
+- Dice Duel
+- Number Rush
