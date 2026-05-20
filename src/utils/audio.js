@@ -1,8 +1,12 @@
 let audioContext;
 
-function playTone(frequency, duration = 0.08) {
+export function playTone(soundOn, frequency, duration = 0.08) {
   if (!soundOn) return;
-  audioContext ||= new AudioContext();
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  audioContext ||= new AudioContextClass();
   const oscillator = audioContext.createOscillator();
   const gain = audioContext.createGain();
 

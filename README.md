@@ -1,9 +1,22 @@
-# Game Hub
+# Game Hub React
 
-A self-contained browser arcade hub with multiple playable games.
+A React + Vite arcade hub with multiple playable games.
 
-Open `index.html` in a browser, then choose a game:
+## Games
 
 - Neon Reel 1x3
 - Dice Duel
 - Number Rush
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Production build
+
+```bash
+npm run build
+```
