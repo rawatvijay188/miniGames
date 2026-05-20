@@ -542,18 +542,87 @@ input[type="range"] {
 .dice-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 18px;
+  perspective: 1000px;
 }
 
 .dice-row b {
-  display: grid;
-  place-items: center;
+  --die-size: clamp(86px, 16vw, 132px);
+  --die-half: calc(var(--die-size) / 2);
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: var(--die-size);
   aspect-ratio: 1;
-  border-radius: 8px;
-  background: #f6f7fb;
-  color: #151016;
-  font-size: clamp(3.2rem, 10vw, 5rem);
-  line-height: 1;
+  justify-self: center;
+  font-style: normal;
+}
+
+.dice-cube {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 680ms cubic-bezier(0.18, 0.72, 0.26, 1);
+}
+
+.face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8%;
+  padding: 12%;
+  border: 2px solid #dde0e7;
+  border-radius: 18%;
+  background: linear-gradient(145deg, #ffffff, #eef1f7 48%, #cfd4de);
+  box-shadow: inset 10px 10px 16px rgba(255, 255, 255, 0.78), inset -10px -12px 18px rgba(32, 38, 52, 0.18);
+  box-sizing: border-box;
+  backface-visibility: hidden;
+}
+
+.dot {
+  width: 42%;
+  aspect-ratio: 1;
+  align-self: center;
+  justify-self: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3b3640, #111015 72%);
+  box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.18), inset -2px -2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.empty {
+  visibility: hidden;
+}
+
+.front {
+  transform: rotateY(0deg) translateZ(var(--die-half));
+}
+
+.back {
+  transform: rotateY(180deg) translateZ(var(--die-half));
+}
+
+.right {
+  transform: rotateY(90deg) translateZ(var(--die-half));
+}
+
+.left {
+  transform: rotateY(-90deg) translateZ(var(--die-half));
+}
+
+.top {
+  transform: rotateX(90deg) translateZ(var(--die-half));
+}
+
+.bottom {
+  transform: rotateX(-90deg) translateZ(var(--die-half));
+}
+.dice-row b.is-rolling {
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.32));
 }
 
 .mini-controls,
@@ -645,6 +714,22 @@ input[type="range"] {
   }
   100% {
     transform: translateY(10%);
+  }
+}
+
+@keyframes roll {
+  0%,
+  100% {
+    transform: perspective(700px) rotateX(18deg) rotateY(-18deg);
+  }
+  25% {
+    transform: perspective(700px) rotateX(64deg) rotateY(-64deg);
+  }
+  50% {
+    transform: perspective(700px) rotateX(18deg) rotateY(-96deg);
+  }
+  75% {
+    transform: perspective(700px) rotateX(64deg) rotateY(-40deg);
   }
 }
 
