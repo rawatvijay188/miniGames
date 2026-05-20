@@ -5,21 +5,65 @@ const message = document.querySelector("#numberMessage");
 const form = document.querySelector("#guessForm");
 const input = document.querySelector("#guessInput");
 const resetButton = document.querySelector("#resetNumber");
+const rangeLabel = document.querySelector("#rangeLabel");
+const minRangeInput = document.querySelector("#minRange");
+const maxRangeInput = document.querySelector("#maxRange");
 
 let target = 0;
 let attempts = 6;
 let streak = 0;
+let minRange = 1;
+let maxRange = 50;
 
 function pickTarget() {
-  return Math.floor(Math.random() * 50) + 1;
+  return Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;
+}
+
+function readRange() {
+  const nextMin = Number(minRangeInput.value);
+  const nextMax = Number(maxRangeInput.value);
+
+  if (!Number.isInteger(nextMin) || !Number.isInteger(nextMax)) {
+    message.textContent = "Use whole numbers for the range.";
+    return false;
+  }
+
+  if (nextMin < 1 || nextMax > 1000 || nextMin >= nextMax) {
+    message.textContent = "Use a range from 1 to 1000, with min below max.";
+    return false;
+  }
+
+  minRange = nextMin;
+  maxRange = nextMax;
+  return true;
 }
 
 function updateNumberUi() {
   attemptsEl.textContent = String(attempts);
   streakEl.textContent = String(streak);
+  rangeLabel.textContent = `${minRange}-${maxRange}`;
+  input.min = String(minRange);
+  input.max = String(maxRange);
+  input.placeholder = "Enter a number";
+}
+
+function previewRange() {
+  const nextMin = Number(minRangeInput.value);
+  const nextMax = Number(maxRangeInput.value);
+
+  if (!Number.isInteger(nextMin) || !Number.isInteger(nextMax) || nextMin >= nextMax) {
+    return;
+  }
+
+  rangeLabel.textContent = `${nextMin}-${nextMax}`;
+  input.min = String(nextMin);
+  input.max = String(nextMax);
+  input.placeholder = "Enter a number";
 }
 
 function newRound() {
+  if (!readRange()) return;
+
   target = pickTarget();
   attempts = 6;
   mysteryNumber.textContent = "?";
@@ -43,8 +87,8 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const guess = Number(input.value);
-  if (!Number.isInteger(guess) || guess < 1 || guess > 50) {
-    message.textContent = "Pick a number from 1 to 50.";
+  if (!Number.isInteger(guess) || guess < minRange || guess > maxRange) {
+    message.textContent = `Pick a number from ${minRange} to ${maxRange}.`;
     return;
   }
 
@@ -61,7 +105,7 @@ form.addEventListener("submit", (event) => {
     endRound("Round over. Start a new one.", target);
     return;
   }
-how 
+
   message.textContent = guess < target ? "Higher." : "Lower.";
   input.value = "";
   input.focus();
@@ -69,4 +113,6 @@ how
 });
 
 resetButton.addEventListener("click", newRound);
+minRangeInput.addEventListener("input", previewRange);
+maxRangeInput.addEventListener("input", previewRange);
 newRound();

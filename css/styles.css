@@ -557,7 +557,8 @@ input[type="range"] {
 }
 
 .mini-controls,
-.guess-form {
+.guess-form,
+.range-editor {
   display: grid;
   align-items: center;
   gap: 12px;
@@ -603,7 +604,25 @@ input[type="range"] {
   grid-template-columns: 1fr minmax(120px, 160px) 54px;
 }
 
-.guess-form input {
+.range-editor {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 0 18px;
+}
+
+.range-editor label {
+  display: grid;
+  gap: 6px;
+}
+
+.range-editor span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.guess-form input,
+.range-editor input {
   min-height: 52px;
   width: 100%;
   border: 1px solid var(--line);
@@ -692,13 +711,18 @@ input[type="range"] {
   }
 
   .mini-controls,
-  .guess-form {
+  .guess-form,
+  .range-editor {
     grid-template-columns: 44px 1fr 44px;
   }
 
   .guess-form input,
   .guess-form .spin-button {
     grid-column: 1 / -1;
+  }
+
+  .range-editor label {
+    grid-column: span 3;
   }
 
   .duel-table {
