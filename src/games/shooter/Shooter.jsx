@@ -135,6 +135,13 @@ export default function Shooter() {
     savedGameOverRef.current = false;
   }
 
+  // Auto-start when the component mounts so selecting the tile begins play immediately
+  useEffect(() => {
+    startGame();
+    // do not restart automatically on remounts beyond initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function savePlayerHighScores() {
     const names = playerNames.map(normalizeName);
     const currentScores = gameRef.current.scores || [0, 0];
