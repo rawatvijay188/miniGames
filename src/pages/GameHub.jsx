@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>3 games</span>
+          <span>4 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -48,6 +48,18 @@ export default function GameHub() {
         >
           <span>?</span>
           <span>42</span>
+        </GameCard>
+
+        <GameCard
+          route="space-shooter"
+          artClassName="shooter-art"
+          kicker="Arcade shooter"
+          title="Space Shooter"
+          description="Team up, dodge enemy waves, and fire fast to protect the zone."
+        >
+          <span>⇆</span>
+          <span>✹</span>
+          <span>↑</span>
         </GameCard>
       </section>
     </main>
