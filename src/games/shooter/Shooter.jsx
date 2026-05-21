@@ -11,12 +11,15 @@ const BULLET_SPEED = 10;
 const ENEMY_SIZE = 26;
 const ENEMY_BASE_SPEED = 2.2;
 const SPAWN_FRAMES = 55;
+const STORAGE_KEY = "duo-space-shooter-records";
+const NAME_STORAGE_KEY = "duo-space-shooter-player-names";
+const DEFAULT_PLAYER_NAMES = ["Pilot 1", "Pilot 2"];
 
 function createInitialGame() {
   return {
     status: "ready",
-    score: 0,
     lives: [3, 3],
+    scores: [0, 0],
     frame: 0,
     lastSpawn: 0,
     lastShot: [0, 0],
@@ -38,6 +41,48 @@ function createInitialGame() {
   };
 }
 
+function readSavedRecords() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function readSavedNames() {
+  if (typeof window === "undefined") {
+    return DEFAULT_PLAYER_NAMES;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(NAME_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_PLAYER_NAMES;
+  } catch {
+    return DEFAULT_PLAYER_NAMES;
+  }
+}
+
+function savePlayerNames(names) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(NAME_STORAGE_KEY, JSON.stringify(names));
+}
+
+function saveRecords(records) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -50,26 +95,61 @@ export default function Shooter() {
   const canvasRef = useRef(null);
   const gameRef = useRef(createInitialGame());
   const keysRef = useRef({});
-  const [score, setScore] = useState(0);
+  const savedGameOverRef = useRef(false);
+  const [playerNames, setPlayerNames] = useState(() => readSavedNames());
+  const [playerScores, setPlayerScores] = useState([0, 0]);
   const [player1Lives, setPlayer1Lives] = useState(3);
   const [player2Lives, setPlayer2Lives] = useState(3);
   const [status, setStatus] = useState("ready");
+  const [savedScores, setSavedScores] = useState(() => readSavedRecords());
+  const totalScore = playerScores[0] + playerScores[1];
+
+  function normalizeName(name, index) {
+    const trimmed = name.trim();
+    return trimmed || `Pilot ${index + 1}`;
+  }
+
+  function updatePlayerName(index, value) {
+    const nextNames = [...playerNames];
+    nextNames[index] = value;
+    setPlayerNames(nextNames);
+    savePlayerNames(nextNames);
+  }
 
   function resetGame() {
     gameRef.current = createInitialGame();
-    setScore(0);
+    setPlayerScores([0, 0]);
     setPlayer1Lives(3);
     setPlayer2Lives(3);
     setStatus("ready");
+    savedGameOverRef.current = false;
   }
 
   function startGame() {
     gameRef.current = createInitialGame();
     gameRef.current.status = "playing";
-    setScore(0);
+    setPlayerScores([0, 0]);
     setPlayer1Lives(3);
     setPlayer2Lives(3);
     setStatus("playing");
+    savedGameOverRef.current = false;
+  }
+
+  function savePlayerHighScores() {
+    const names = playerNames.map(normalizeName);
+    const currentScores = gameRef.current.scores || [0, 0];
+    const updatedRecords = { ...readSavedRecords() };
+
+    currentScores.forEach((value, index) => {
+      const name = names[index];
+      const previous = updatedRecords[name] || 0;
+      if (value > previous) {
+        updatedRecords[name] = value;
+      }
+    });
+
+    setSavedScores(updatedRecords);
+    saveRecords(updatedRecords);
   }
 
   function damagePlayer(playerIndex) {
@@ -88,6 +168,20 @@ export default function Shooter() {
       setStatus("game-over");
     }
   }
+
+  useEffect(() => {
+    if (status !== "game-over") {
+      savedGameOverRef.current = false;
+      return;
+    }
+
+    if (savedGameOverRef.current) {
+      return;
+    }
+
+    savePlayerHighScores();
+    savedGameOverRef.current = true;
+  }, [status]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,8 +278,8 @@ export default function Shooter() {
           player.bullets = player.bullets.filter((bullet) => {
             if (collideRect(bullet.x, bullet.y, bullet.width, bullet.height, enemy.x, enemy.y, enemy.size, enemy.size)) {
               hitByBullet = true;
-              game.score += 12;
-              setScore(game.score);
+              game.scores[playerIndex] += 12;
+              setPlayerScores([...game.scores]);
               return false;
             }
             return true;
@@ -305,18 +399,46 @@ export default function Shooter() {
           </button>
         </div>
 
-        <div className="score-panel">
+        <div className="player-config">
+          <div className="player-input">
+            <label>
+              <span>Player 1 name</span>
+              <input
+                type="text"
+                value={playerNames[0]}
+                onChange={(event) => updatePlayerName(0, event.target.value)}
+              />
+            </label>
+            <p>Best: {savedScores[normalizeName(playerNames[0], 0)] || 0}</p>
+          </div>
+          <div className="player-input">
+            <label>
+              <span>Player 2 name</span>
+              <input
+                type="text"
+                value={playerNames[1]}
+                onChange={(event) => updatePlayerName(1, event.target.value)}
+              />
+            </label>
+            <p>Best: {savedScores[normalizeName(playerNames[1], 1)] || 0}</p>
+          </div>
+        </div>
+
+        <div className="score-panel score-panel-wide">
           <div className="score-card">
-            <span>Score</span>
-            <strong>{score}</strong>
+            <span>{normalizeName(playerNames[0], 0)} Score</span>
+            <strong>{playerScores[0]}</strong>
+            <small>Lives {player1Lives}</small>
           </div>
           <div className="score-card">
-            <span>Player 1 Lives</span>
-            <strong>{player1Lives}</strong>
+            <span>{normalizeName(playerNames[1], 1)} Score</span>
+            <strong>{playerScores[1]}</strong>
+            <small>Lives {player2Lives}</small>
           </div>
           <div className="score-card">
-            <span>Player 2 Lives</span>
-            <strong>{player2Lives}</strong>
+            <span>Total Score</span>
+            <strong>{totalScore}</strong>
+            <small>Combined player points</small>
           </div>
         </div>
 
