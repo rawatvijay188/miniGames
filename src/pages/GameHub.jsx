@@ -51,10 +51,10 @@ export default function GameHub() {
         </GameCard>
 
         <GameCard
-          route="space-shooter"
+          route="duo-space-shooter"
           artClassName="shooter-art"
           kicker="Arcade shooter"
-          title="Space Shooter"
+          title="Duo Space Shooter"
           description="Team up, dodge enemy waves, and fire fast to protect the zone."
         >
           <span>⇆</span>
