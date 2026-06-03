@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .vite/
+
+# Android signing — never commit these
+keystore.properties
+*.jks
+*.keystore
