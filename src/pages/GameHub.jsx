@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>4 games</span>
+          <span>5 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -60,6 +60,17 @@ export default function GameHub() {
           <span>⇆</span>
           <span>✹</span>
           <span>↑</span>
+        </GameCard>
+
+        <GameCard
+          route="king-queen-minister-thief"
+          kicker="Regal reels"
+          title="King, Queen, Minister, Thief"
+          description="Spin the royal court for triple payouts and pair bonuses."
+        >
+          <span>♚</span>
+          <span>♕</span>
+          <span>🕵️</span>
         </GameCard>
       </section>
     </main>
