@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>9 games</span>
+          <span>13 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -119,6 +119,54 @@ export default function GameHub() {
           <span>🔴</span>
           <span>💎</span>
           <span>🔵</span>
+        </GameCard>
+
+        <GameCard
+          route="roulette"
+          artClassName="roulette-art"
+          kicker="European wheel"
+          title="Roulette"
+          description="Bet on red, black, odd, even, high, low — or go straight-up on any number for 35:1."
+        >
+          <span>R</span>
+          <span>0</span>
+          <span>B</span>
+        </GameCard>
+
+        <GameCard
+          route="video-poker"
+          artClassName="vp-art"
+          kicker="Jacks or better"
+          title="Video Poker"
+          description="Deal five cards, hold the ones you want, draw to complete your best hand."
+        >
+          <span>A♠</span>
+          <span>K♥</span>
+          <span>Q♦</span>
+        </GameCard>
+
+        <GameCard
+          route="keno"
+          artClassName="keno-art"
+          kicker="Pick your numbers"
+          title="Keno"
+          description="Pick up to 8 lucky numbers from 1–40, then watch 15 draw and collect your prize."
+        >
+          <span>7</span>
+          <span>23</span>
+          <span>38</span>
+        </GameCard>
+
+        <GameCard
+          route="scratch-card"
+          artClassName="scratch-art"
+          kicker="Instant win"
+          title="Scratch Card"
+          description="Buy a card and scratch three-in-a-row to win. Diamond rows pay 50× your bet."
+        >
+          <span>💎</span>
+          <span>?</span>
+          <span>🔔</span>
         </GameCard>
       </section>
     </main>

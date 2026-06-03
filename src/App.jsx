@@ -7,6 +7,10 @@ import Blackjack from "./games/blackjack/Blackjack.jsx";
 import CosmicCascade from "./games/cosmic-cascade/CosmicCascade.jsx";
 import FruitFrenzy from "./games/fruit-frenzy/FruitFrenzy.jsx";
 import GemStorm from "./games/gem-storm/GemStorm.jsx";
+import Roulette from "./games/roulette/Roulette.jsx";
+import VideoPoker from "./games/video-poker/VideoPoker.jsx";
+import Keno from "./games/keno/Keno.jsx";
+import ScratchCard from "./games/scratch-card/ScratchCard.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
 import GameHub from "./pages/GameHub.jsx";
 
@@ -19,7 +23,11 @@ const routes = {
   "blackjack": Blackjack,
   "cosmic-cascade": CosmicCascade,
   "fruit-frenzy": FruitFrenzy,
-  "gem-storm": GemStorm
+  "gem-storm": GemStorm,
+  "roulette": Roulette,
+  "video-poker": VideoPoker,
+  "keno": Keno,
+  "scratch-card": ScratchCard,
 };
 
 export default function App() {
