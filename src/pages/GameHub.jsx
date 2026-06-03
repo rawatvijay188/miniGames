@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>13 games</span>
+          <span>17 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -167,6 +167,54 @@ export default function GameHub() {
           <span>💎</span>
           <span>?</span>
           <span>🔔</span>
+        </GameCard>
+
+        <GameCard
+          route="coin-flip-streak"
+          artClassName="coin-art"
+          kicker="Push your luck"
+          title="Coin Flip Streak"
+          description="Call heads or tails, double your pot on every win, and cash out before it breaks."
+        >
+          <span>H</span>
+          <span>T</span>
+          <span>2x</span>
+        </GameCard>
+
+        <GameCard
+          route="lucky-wheel"
+          artClassName="wheel-art"
+          kicker="Wheel of fortune"
+          title="Lucky Wheel"
+          description="Spin the prize wheel for multipliers up to a 50x jackpot."
+        >
+          <span>10x</span>
+          <span>50x</span>
+          <span>2x</span>
+        </GameCard>
+
+        <GameCard
+          route="plinko-drop"
+          artClassName="plinko-art"
+          kicker="Bounce & win"
+          title="Plinko Drop"
+          description="Drop a chip through the pegs and let it bounce into a multiplier bucket."
+        >
+          <span>🔴</span>
+          <span>18x</span>
+          <span>•</span>
+        </GameCard>
+
+        <GameCard
+          route="high-card-war"
+          artClassName="war-art"
+          kicker="High card wins"
+          title="High Card War"
+          description="Draw against the dealer — the higher card takes the pot. Aces are highest."
+        >
+          <span>A♠</span>
+          <span>VS</span>
+          <span>K♥</span>
         </GameCard>
       </section>
     </main>
