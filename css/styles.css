@@ -255,6 +255,58 @@ h2 {
   color: var(--rose);
 }
 
+.cosmic-art {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: linear-gradient(180deg, rgba(73, 215, 223, 0.18), rgba(11, 13, 18, 0.7));
+}
+
+.cosmic-art span {
+  background: radial-gradient(circle at 50% 40%, #1a2740, #0b0d12);
+  color: #f6f7fb;
+}
+
+/* ===== Cosmic Cascade ===== */
+.cascade-grid {
+  display: grid;
+  gap: 8px;
+  padding: clamp(10px, 3vw, 18px);
+  border: 1px solid rgba(73, 215, 223, 0.4);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 30% 10%, rgba(73, 215, 223, 0.16), transparent 60%),
+    #0b0d12;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.cascade-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(32, 39, 56, 0.9), rgba(16, 20, 29, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: clamp(1.6rem, 6vw, 2.6rem);
+  transition: transform 160ms ease;
+  animation: drop-in 280ms ease;
+}
+
+.cascade-cell.is-win {
+  background: linear-gradient(180deg, rgba(73, 215, 223, 0.5), rgba(247, 189, 74, 0.4));
+  box-shadow: 0 0 18px rgba(73, 215, 223, 0.7);
+  transform: scale(1.08);
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .game-nav {
   margin-bottom: 18px;
 }

@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>6 games</span>
+          <span>7 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -83,6 +83,18 @@ export default function GameHub() {
           <span>A♠</span>
           <span>21</span>
           <span>K♥</span>
+        </GameCard>
+
+        <GameCard
+          route="cosmic-cascade"
+          artClassName="cosmic-art"
+          kicker="Tumbling reels"
+          title="Cosmic Cascade"
+          description="Match clusters of cosmic symbols, then watch them tumble for chain-combo multipliers."
+        >
+          <span>🚀</span>
+          <span>⭐</span>
+          <span>👽</span>
         </GameCard>
       </section>
     </main>

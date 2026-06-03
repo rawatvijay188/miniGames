@@ -4,6 +4,7 @@ import NumberRush from "./games/number-rush/NumberRush.jsx";
 import Shooter from "./games/shooter/Shooter.jsx";
 import KingQueenMinisterThief from "./games/king-queen-minister-thief/KingQueenMinisterThief.jsx";
 import Blackjack from "./games/blackjack/Blackjack.jsx";
+import CosmicCascade from "./games/cosmic-cascade/CosmicCascade.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
 import GameHub from "./pages/GameHub.jsx";
 
@@ -13,7 +14,8 @@ const routes = {
   "number-rush": NumberRush,
   "duo-space-shooter": Shooter,
   "king-queen-minister-thief": KingQueenMinisterThief,
-  "blackjack": Blackjack
+  "blackjack": Blackjack,
+  "cosmic-cascade": CosmicCascade
 };
 
 export default function App() {
