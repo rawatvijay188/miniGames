@@ -6,32 +6,31 @@ import { playTone } from "../../utils/audio.js";
 import {
   COLS,
   ROWS,
-  SYMBOLS,
+  FRUITS,
   randomGrid,
-  findWinningIds,
-  collapse,
-  cascadePayout
-} from "./cascadeLogic.js";
+  findClusters,
+  clusterPayout,
+  collapse
+} from "./fruitLogic.js";
 
 const INITIAL_BALANCE = 500;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
-const STEP_MS = 480;
+const STEP_MS = 460;
 
 function clampBet(nextBet, balance) {
   const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
   return Math.min(max, Math.max(MIN_BET, nextBet));
 }
 
-export default function CosmicCascade() {
+export default function FruitFrenzy() {
   const [grid, setGrid] = useState(randomGrid);
   const [balance, setBalance] = useState(INITIAL_BALANCE);
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
-  const [multiplier, setMultiplier] = useState(1);
-  const [winningIds, setWinningIds] = useState([]);
-  const [message, setMessage] = useState("Spin to start the cascade.");
+  const [winCells, setWinCells] = useState(new Set());
+  const [message, setMessage] = useState("Spin to find fruit clusters.");
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
 
@@ -46,8 +45,7 @@ export default function CosmicCascade() {
     setBusy(true);
     setBalance((b) => b - bet);
     setLastWin(0);
-    setWinningIds([]);
-    setMultiplier(1);
+    setWinCells(new Set());
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
@@ -55,55 +53,52 @@ export default function CosmicCascade() {
     setGrid(working);
     await sleep(STEP_MS);
 
-    const betUnit = bet / 10;
+    const betUnit = bet / 20;
     let totalWin = 0;
     let chain = 0;
 
-    // Keep cascading while the grid keeps producing wins.
     while (true) {
-      const wins = findWinningIds(working);
-      if (wins.length === 0) break;
+      const clusters = findClusters(working);
+      if (clusters.length === 0) break;
 
       chain += 1;
-      const stepMultiplier = chain; // x1, x2, x3... per cascade
-      setMultiplier(stepMultiplier);
-      setWinningIds(wins);
-      const stepWin = cascadePayout(working, wins, betUnit, stepMultiplier);
+      const stepWin = clusterPayout(clusters, betUnit) * chain;
       totalWin += stepWin;
-      setMessage(`Cascade x${stepMultiplier}! +${money(stepWin)}`);
-      playTone(soundOn, 480 + chain * 80, 0.1);
+
+      const cells = new Set();
+      for (const cl of clusters) for (const [r, c] of cl.cells) cells.add(`${r}-${c}`);
+      setWinCells(cells);
+      setMessage(`${clusters.length} cluster${clusters.length > 1 ? "s" : ""} x${chain}! +${money(stepWin)}`);
+      playTone(soundOn, 460 + chain * 70, 0.1);
       await sleep(STEP_MS);
 
-      working = collapse(working, wins);
+      working = collapse(working, clusters);
       setGrid(working);
-      setWinningIds([]);
+      setWinCells(new Set());
       await sleep(STEP_MS);
     }
 
     if (totalWin > 0) {
       setBalance((b) => b + totalWin);
       setLastWin(totalWin);
-      setMessage(`Won ${money(totalWin)} across ${chain} cascade${chain > 1 ? "s" : ""}!`);
+      setMessage(`Won ${money(totalWin)}!`);
       playTone(soundOn, 760, 0.14);
     } else {
-      setMessage("No cluster. Spin again.");
+      setMessage("No clusters. Spin again.");
     }
 
-    setMultiplier(1);
     setBet((b) => clampBet(b, balance - bet + totalWin));
     setBusy(false);
   };
 
-  const winSet = new Set(winningIds);
-
   return (
     <main className="shell">
-      <section className="machine" aria-label="Cosmic Cascade slot game">
+      <section className="machine" aria-label="Fruit Frenzy slot game">
         <GameNav />
         <header className="topbar">
           <div>
-            <p className="kicker">Tumbling reels</p>
-            <h1>Cosmic Cascade</h1>
+            <p className="kicker">Cluster pays</p>
+            <h1>Fruit Frenzy</h1>
           </div>
           <button
             className={`icon-button ${soundOn ? "" : "is-muted"}`}
@@ -122,22 +117,20 @@ export default function CosmicCascade() {
           <div className="meter"><span>Last Win</span><strong>{money(lastWin)}</strong></div>
         </section>
 
-        <section className="cascade-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-          {grid.map((col, c) =>
-            col.map((symbol, r) => (
+        <section className="cluster-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+          {grid.map((row, r) =>
+            row.map((fruit, c) => (
               <div
-                key={`${c}-${r}`}
-                className={`cascade-cell ${winSet.has(symbol.id) ? "is-win" : ""}`}
+                key={`${r}-${c}`}
+                className={`cascade-cell ${winCells.has(`${r}-${c}`) ? "is-win" : ""}`}
               >
-                <span>{symbol.emoji}</span>
+                <span>{fruit.emoji}</span>
               </div>
             ))
           )}
         </section>
 
-        <div className={`win-banner ${lastWin > 0 ? "is-win" : ""}`} role="status">
-          {message}
-        </div>
+        <div className={`win-banner ${lastWin > 0 ? "is-win" : ""}`} role="status">{message}</div>
 
         <section className="controls" aria-label="Slot controls">
           <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={busy || bet <= MIN_BET}>-</button>
@@ -149,8 +142,8 @@ export default function CosmicCascade() {
         </section>
 
         <section className="paytable" aria-label="Paytable">
-          {SYMBOLS.map((s) => (
-            <div key={s.id}><span>{s.emoji}</span><strong>{s.value}</strong></div>
+          {FRUITS.map((f) => (
+            <div key={f.id}><span>{f.emoji}</span><strong>{f.value}x</strong></div>
           ))}
         </section>
       </section>

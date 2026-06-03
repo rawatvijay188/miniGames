@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>7 games</span>
+          <span>9 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -95,6 +95,30 @@ export default function GameHub() {
           <span>🚀</span>
           <span>⭐</span>
           <span>👽</span>
+        </GameCard>
+
+        <GameCard
+          route="fruit-frenzy"
+          artClassName="fruit-art"
+          kicker="Cluster pays"
+          title="Fruit Frenzy"
+          description="Land touching groups of five or more fruits to score, then watch them tumble away."
+        >
+          <span>🍒</span>
+          <span>🍉</span>
+          <span>🍌</span>
+        </GameCard>
+
+        <GameCard
+          route="gem-storm"
+          artClassName="gem-art"
+          kicker="Expanding wilds"
+          title="Gem Storm"
+          description="Win both ways as diamond wilds expand to fill whole reels for bigger payouts."
+        >
+          <span>🔴</span>
+          <span>💎</span>
+          <span>🔵</span>
         </GameCard>
       </section>
     </main>

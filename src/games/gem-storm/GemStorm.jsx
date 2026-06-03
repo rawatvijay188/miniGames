@@ -3,35 +3,26 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
-import {
-  COLS,
-  ROWS,
-  SYMBOLS,
-  randomGrid,
-  findWinningIds,
-  collapse,
-  cascadePayout
-} from "./cascadeLogic.js";
+import { REELS, ROWS, GEMS, WILD, randomGrid, expandWilds, evaluate } from "./gemLogic.js";
 
 const INITIAL_BALANCE = 500;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
-const STEP_MS = 480;
 
 function clampBet(nextBet, balance) {
   const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
   return Math.min(max, Math.max(MIN_BET, nextBet));
 }
 
-export default function CosmicCascade() {
+export default function GemStorm() {
   const [grid, setGrid] = useState(randomGrid);
   const [balance, setBalance] = useState(INITIAL_BALANCE);
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
-  const [multiplier, setMultiplier] = useState(1);
-  const [winningIds, setWinningIds] = useState([]);
-  const [message, setMessage] = useState("Spin to start the cascade.");
+  const [winCells, setWinCells] = useState(new Set());
+  const [expanded, setExpanded] = useState(new Set());
+  const [message, setMessage] = useState("Spin for expanding wild gems.");
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
 
@@ -46,64 +37,50 @@ export default function CosmicCascade() {
     setBusy(true);
     setBalance((b) => b - bet);
     setLastWin(0);
-    setWinningIds([]);
-    setMultiplier(1);
+    setWinCells(new Set());
+    setExpanded(new Set());
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
     let working = randomGrid();
     setGrid(working);
-    await sleep(STEP_MS);
+    await sleep(420);
 
-    const betUnit = bet / 10;
-    let totalWin = 0;
-    let chain = 0;
-
-    // Keep cascading while the grid keeps producing wins.
-    while (true) {
-      const wins = findWinningIds(working);
-      if (wins.length === 0) break;
-
-      chain += 1;
-      const stepMultiplier = chain; // x1, x2, x3... per cascade
-      setMultiplier(stepMultiplier);
-      setWinningIds(wins);
-      const stepWin = cascadePayout(working, wins, betUnit, stepMultiplier);
-      totalWin += stepWin;
-      setMessage(`Cascade x${stepMultiplier}! +${money(stepWin)}`);
-      playTone(soundOn, 480 + chain * 80, 0.1);
-      await sleep(STEP_MS);
-
-      working = collapse(working, wins);
-      setGrid(working);
-      setWinningIds([]);
-      await sleep(STEP_MS);
+    const { grid: expandedGrid, expandedCols } = expandWilds(working);
+    if (expandedCols.size > 0) {
+      setGrid(expandedGrid);
+      setExpanded(expandedCols);
+      setMessage("Expanding wild!");
+      playTone(soundOn, 600, 0.12);
+      await sleep(520);
+      working = expandedGrid;
     }
 
-    if (totalWin > 0) {
-      setBalance((b) => b + totalWin);
-      setLastWin(totalWin);
-      setMessage(`Won ${money(totalWin)} across ${chain} cascade${chain > 1 ? "s" : ""}!`);
+    const betUnit = bet / 20;
+    const { total, winningReels } = evaluate(working, betUnit);
+
+    if (total > 0) {
+      setWinCells(winningReels);
+      setBalance((b) => b + total);
+      setLastWin(total);
+      setMessage(`Won ${money(total)}!`);
       playTone(soundOn, 760, 0.14);
     } else {
-      setMessage("No cluster. Spin again.");
+      setMessage("No win. Spin again.");
     }
 
-    setMultiplier(1);
-    setBet((b) => clampBet(b, balance - bet + totalWin));
+    setBet((b) => clampBet(b, balance - bet + total));
     setBusy(false);
   };
 
-  const winSet = new Set(winningIds);
-
   return (
     <main className="shell">
-      <section className="machine" aria-label="Cosmic Cascade slot game">
+      <section className="machine" aria-label="Gem Storm slot game">
         <GameNav />
         <header className="topbar">
           <div>
-            <p className="kicker">Tumbling reels</p>
-            <h1>Cosmic Cascade</h1>
+            <p className="kicker">Expanding wilds</p>
+            <h1>Gem Storm</h1>
           </div>
           <button
             className={`icon-button ${soundOn ? "" : "is-muted"}`}
@@ -122,22 +99,22 @@ export default function CosmicCascade() {
           <div className="meter"><span>Last Win</span><strong>{money(lastWin)}</strong></div>
         </section>
 
-        <section className="cascade-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-          {grid.map((col, c) =>
-            col.map((symbol, r) => (
-              <div
-                key={`${c}-${r}`}
-                className={`cascade-cell ${winSet.has(symbol.id) ? "is-win" : ""}`}
-              >
-                <span>{symbol.emoji}</span>
-              </div>
-            ))
+        <section className="gem-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${REELS}, 1fr)` }}>
+          {Array.from({ length: ROWS }).map((_, row) =>
+            Array.from({ length: REELS }).map((__, reel) => {
+              const sym = grid[reel][row];
+              const isWin = winCells.has(`${reel}-${row}`);
+              const isWild = sym.wild;
+              return (
+                <div key={`${reel}-${row}`} className={`cascade-cell ${isWin ? "is-win" : ""} ${isWild ? "is-wild" : ""}`}>
+                  <span>{sym.emoji}</span>
+                </div>
+              );
+            })
           )}
         </section>
 
-        <div className={`win-banner ${lastWin > 0 ? "is-win" : ""}`} role="status">
-          {message}
-        </div>
+        <div className={`win-banner ${lastWin > 0 ? "is-win" : ""}`} role="status">{message}</div>
 
         <section className="controls" aria-label="Slot controls">
           <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={busy || bet <= MIN_BET}>-</button>
@@ -149,9 +126,10 @@ export default function CosmicCascade() {
         </section>
 
         <section className="paytable" aria-label="Paytable">
-          {SYMBOLS.map((s) => (
-            <div key={s.id}><span>{s.emoji}</span><strong>{s.value}</strong></div>
+          {GEMS.map((g) => (
+            <div key={g.id}><span>{g.emoji}</span><strong>{g.value}x</strong></div>
           ))}
+          <div><span>{WILD.emoji}</span><strong>Wild</strong></div>
         </section>
       </section>
     </main>
