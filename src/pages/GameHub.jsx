@@ -10,7 +10,7 @@ export default function GameHub() {
           <p>Choose a game and jump straight into the table. Each tile opens its own playable screen.</p>
         </div>
         <div className="hero-badges" aria-label="Platform stats">
-          <span>5 games</span>
+          <span>6 games</span>
           <span>React ready</span>
           <span>PixiJS next</span>
         </div>
@@ -71,6 +71,18 @@ export default function GameHub() {
           <span>♚</span>
           <span>♕</span>
           <span>🕵️</span>
+        </GameCard>
+
+        <GameCard
+          route="blackjack"
+          artClassName="blackjack-art"
+          kicker="Card table"
+          title="Blackjack"
+          description="Beat the dealer to 21 without going bust. Hit, stand, or double down."
+        >
+          <span>A♠</span>
+          <span>21</span>
+          <span>K♥</span>
         </GameCard>
       </section>
     </main>
