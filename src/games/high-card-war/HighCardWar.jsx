@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 
 const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
@@ -120,15 +121,27 @@ export default function HighCardWar() {
             <p className="kicker">High card wins</p>
             <h1>High Card War</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="High Card War">
+              <p><strong>Goal:</strong> Draw a higher card than the dealer to win.</p>
+              <ul>
+                <li>Set your bet and press <strong>Draw</strong>. You and the dealer each get one card.</li>
+                <li>The <strong>higher card wins</strong>. Card order is 2 (lowest) up to <strong>Ace (highest)</strong>.</li>
+                <li>Win and you're paid <strong>1:1</strong> (double your bet).</li>
+                <li>A <strong>tie</strong> is a push — your bet is returned.</li>
+                <li>Draw a lower card and you lose the bet.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Status">

@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import { buildDeck, shuffle, evaluateHand, HAND_RANKS } from "./pokerLogic.js";
 
 const INITIAL_BALANCE = 300;
@@ -162,13 +163,25 @@ export default function VideoPoker() {
             <p className="kicker">Jacks or better</p>
             <h1>Video Poker</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >♪</button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >♪</button>
+            <RulesModal title="Video Poker">
+              <p><strong>Goal:</strong> Make the best five-card poker hand — pairs of Jacks or better pay out.</p>
+              <ul>
+                <li>Set your bet and press <strong>Deal</strong> to get five cards.</li>
+                <li><strong>Tap any cards to hold</strong> them, then press <strong>Draw</strong> to replace the rest.</li>
+                <li>Your final hand is scored on the paytable, from a <strong>pair of Jacks</strong> up to a <strong>Royal Flush</strong>.</li>
+                <li>Better hands pay much more — a flush, full house, or four of a kind are big wins.</li>
+                <li>Anything lower than a pair of Jacks pays nothing.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Score">

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import GameNav from "../../components/GameNav.jsx";
+import RulesModal from "../../components/RulesModal.jsx";
 import Meter from "../../components/Meter.jsx";
 import { playTone } from "../../utils/audio.js";
 import { money } from "../../utils/format.js";
@@ -250,7 +251,7 @@ export default function KingQueenMinisterThief() {
         }, 90);
         spinTimeouts.current.push(interval);
 
-        await sleep(500 + index * 220);
+        await sleep(800 + index * 360);
         clearInterval(interval);
 
         const finalSymbols = forcedIds?.length === 9
@@ -292,15 +293,27 @@ export default function KingQueenMinisterThief() {
             <p className="kicker">Royal slots</p>
             <h1>King, Queen, Minister, Thief</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => setSoundOn(!soundOn)}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => setSoundOn(!soundOn)}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="King, Queen, Minister, Thief">
+              <p><strong>Goal:</strong> Spin the royal court and line up matching characters to win.</p>
+              <ul>
+                <li>Set your bet and press <strong>Spin</strong> across the 3×3 grid.</li>
+                <li><strong>Three matching characters in a line</strong> (row or column) pays out.</li>
+                <li>The <strong>King</strong> pays the most (10×), then Queen, Minister, and Thief.</li>
+                <li>A matching <strong>pair on the center row</strong> wins a smaller Court Pair bonus.</li>
+                <li>Your payout is the multiplier times your bet.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="meters" aria-label="Game totals">

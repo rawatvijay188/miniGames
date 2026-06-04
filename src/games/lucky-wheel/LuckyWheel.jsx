@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 
 const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
@@ -98,15 +99,27 @@ export default function LuckyWheel() {
             <p className="kicker">Wheel of fortune</p>
             <h1>Lucky Wheel</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Lucky Wheel">
+              <p><strong>Goal:</strong> Spin the wheel and land on a multiplier to win that many times your bet.</p>
+              <ul>
+                <li>Set your bet and press <strong>Spin</strong>.</li>
+                <li>Wherever the pointer lands, your bet is multiplied by that segment's value.</li>
+                <li>Segments range from <strong>1× up to a 50× jackpot</strong>.</li>
+                <li>Some segments are blanks (<strong>0×</strong>) — land there and you lose the bet.</li>
+                <li>Bigger multipliers are rarer, so the jackpot is a long shot.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Status">

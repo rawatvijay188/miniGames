@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import {
   COLS,
   ROWS,
@@ -49,9 +50,17 @@ export default function FruitFrenzy() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
+    // Spin animation: rapidly cycle random fruits to build anticipation.
+    const SPIN_TICKS = 16;
+    for (let i = 0; i < SPIN_TICKS; i += 1) {
+      setGrid(randomGrid());
+      playTone(soundOn, 300 + (i % 5) * 40, 0.02);
+      await sleep(95);
+    }
+
     let working = randomGrid();
     setGrid(working);
-    await sleep(STEP_MS);
+    await sleep(320);
 
     const betUnit = bet / 20;
     let totalWin = 0;
@@ -100,15 +109,27 @@ export default function FruitFrenzy() {
             <p className="kicker">Cluster pays</p>
             <h1>Fruit Frenzy</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Fruit Frenzy">
+              <p><strong>Goal:</strong> Land touching groups (clusters) of the same fruit to win — no paylines needed.</p>
+              <ul>
+                <li>Set your bet and press <strong>Spin</strong> to fill the 6×5 grid.</li>
+                <li>A <strong>cluster of 5 or more</strong> matching fruits connected up/down/left/right pays out.</li>
+                <li>Winning clusters vanish and fruits above <strong>tumble down</strong>, with new ones filling the top.</li>
+                <li>Every extra cascade in the same spin <strong>multiplies</strong> your winnings.</li>
+                <li>Bigger clusters and higher-value fruits (banana, strawberry) pay more.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="meters" aria-label="Game totals">

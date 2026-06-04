@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 
 const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
@@ -109,15 +110,27 @@ export default function CoinFlipStreak() {
             <p className="kicker">Push your luck</p>
             <h1>Coin Flip Streak</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Coin Flip Streak">
+              <p><strong>Goal:</strong> Call the coin correctly again and again to grow your pot — then cash out before you miss.</p>
+              <ul>
+                <li>Set your bet, then call <strong>Heads</strong> or <strong>Tails</strong>. A correct call stakes your bet and starts the round.</li>
+                <li>Every correct call <strong>doubles your pot</strong> (×2 each flip) and extends your streak.</li>
+                <li>Press <strong>Cash out</strong> any time to bank the pot and keep your winnings.</li>
+                <li>One <strong>wrong call</strong> ends the streak and you lose the whole pot.</li>
+                <li>It's a push-your-luck gamble: the longer you ride, the more you risk.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Status">

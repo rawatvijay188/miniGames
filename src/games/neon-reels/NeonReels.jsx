@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
+import RulesModal from "../../components/RulesModal.jsx";
 import Meter from "../../components/Meter.jsx";
 import { playTone } from "../../utils/audio.js";
 import { money } from "../../utils/format.js";
@@ -49,7 +50,7 @@ export default function NeonReels() {
         setReels((current) => current.map((symbol, reelIndex) => (reelIndex === index ? weightedSymbol() : symbol)));
       }, 90);
 
-      await sleep(650 + index * 260);
+      await sleep(900 + index * 420);
       clearInterval(ticker);
 
       const forcedSymbol = forcedIds?.[index] ? symbolById(forcedIds[index]) : null;
@@ -89,15 +90,27 @@ export default function NeonReels() {
             <p className="kicker">Arcade slots</p>
             <h1>Neon Reels</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => setSoundOn(!soundOn)}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => setSoundOn(!soundOn)}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Neon Reels">
+              <p><strong>Goal:</strong> Spin the three reels and line up matching symbols on the payline.</p>
+              <ul>
+                <li>Set your bet with the +/− controls and press <strong>Spin</strong>.</li>
+                <li>The center row is the <strong>payline</strong> — match symbols there to win.</li>
+                <li><strong>Three of a kind</strong> pays the most; some symbols also pay for a pair.</li>
+                <li>Higher-value symbols (like the 7) give the biggest payouts.</li>
+                <li>Your win is the symbol's multiplier times your bet.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="meters" aria-label="Game totals">

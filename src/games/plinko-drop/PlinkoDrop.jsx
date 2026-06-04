@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 
 const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
@@ -92,15 +93,27 @@ export default function PlinkoDrop() {
             <p className="kicker">Bounce & win</p>
             <h1>Plinko Drop</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Plinko Drop">
+              <p><strong>Goal:</strong> Drop a chip and let it bounce into a high-multiplier bucket.</p>
+              <ul>
+                <li>Set your bet and press <strong>Drop</strong>.</li>
+                <li>The chip bounces left or right off each peg on its way down.</li>
+                <li>It lands in one of the bottom <strong>buckets</strong>, and your bet is multiplied by that bucket's value.</li>
+                <li>The <strong>edge buckets pay the most</strong> (up to 18×) but are the hardest to reach.</li>
+                <li>The center buckets are common but pay little (as low as 0.5×).</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Status">

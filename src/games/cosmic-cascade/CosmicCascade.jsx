@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import {
   COLS,
   ROWS,
@@ -51,9 +52,17 @@ export default function CosmicCascade() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
+    // Spin animation: rapidly cycle random symbols to build anticipation.
+    const SPIN_TICKS = 16;
+    for (let i = 0; i < SPIN_TICKS; i += 1) {
+      setGrid(randomGrid());
+      playTone(soundOn, 300 + (i % 5) * 40, 0.02);
+      await sleep(95);
+    }
+
     let working = randomGrid();
     setGrid(working);
-    await sleep(STEP_MS);
+    await sleep(320);
 
     const betUnit = bet / 10;
     let totalWin = 0;
@@ -105,15 +114,27 @@ export default function CosmicCascade() {
             <p className="kicker">Tumbling reels</p>
             <h1>Cosmic Cascade</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Cosmic Cascade">
+              <p><strong>Goal:</strong> Land six or more of the same cosmic symbol anywhere on the grid to win.</p>
+              <ul>
+                <li>Set your bet and press <strong>Spin</strong> to fill the 5×4 grid.</li>
+                <li>Any symbol that appears <strong>6 or more times</strong> pays out and those symbols vanish.</li>
+                <li>Surviving symbols stay put and new ones <strong>tumble down</strong> to fill the gaps — that's a cascade.</li>
+                <li>Each cascade in a single spin raises the <strong>multiplier</strong> (×1, ×2, ×3…), so chains pay big.</li>
+                <li>Rarer symbols like the rocket and alien are worth the most.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="meters" aria-label="Game totals">

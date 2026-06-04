@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
+import RulesModal from "../../components/RulesModal.jsx";
 import { money } from "../../utils/format.js";
 import DiceSide from "./DiceSide.jsx";
 import { rollDie } from "./diceConfig.js";
@@ -64,9 +65,23 @@ export default function DiceDuel() {
     <main className="shell">
       <section className="mini-game" aria-label="Dice Duel game">
         <GameNav />
-        <header className="mini-header">
-          <p className="kicker">Quick chance</p>
-          <h1>Dice Duel</h1>
+        <header className="mini-header bj-header">
+          <div>
+            <p className="kicker">Quick chance</p>
+            <h1>Dice Duel</h1>
+          </div>
+          <div className="bj-header-actions">
+            <RulesModal title="Dice Duel">
+              <p><strong>Goal:</strong> Roll a higher total than the dealer to win.</p>
+              <ul>
+                <li>Set your bet and press <strong>Roll</strong>. You and the dealer each roll two dice.</li>
+                <li>The <strong>higher combined total wins</strong>.</li>
+                <li>Win and you're paid <strong>1:1</strong> (double your bet).</li>
+                <li>A <strong>tie</strong> is a push — your bet is returned.</li>
+                <li>Roll lower and you lose the bet.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Score">

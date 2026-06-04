@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import { generateCard, evaluateCard, SYMBOLS } from "./scratchLogic.js";
 
 const INITIAL_BALANCE = 300;
@@ -134,13 +135,24 @@ export default function ScratchCard() {
             <p className="kicker">Instant win</p>
             <h1>Scratch Card</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >♪</button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >♪</button>
+            <RulesModal title="Scratch Card">
+              <p><strong>Goal:</strong> Scratch the card to reveal symbols and match three in a row to win.</p>
+              <ul>
+                <li>Set your bet to buy a card, then <strong>scratch the panels</strong> to reveal what's underneath.</li>
+                <li>Match <strong>three of the same symbol in a row</strong> to win a prize.</li>
+                <li>Each symbol has its own payout — the <strong>diamond row pays 50×</strong> your bet.</li>
+                <li>No matching row means no win — buy another card and try again.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Score">

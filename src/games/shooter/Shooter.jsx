@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
+import RulesModal from "../../components/RulesModal.jsx";
 
 const CANVAS_WIDTH = 920;
 const CANVAS_HEIGHT = 520;
@@ -401,9 +402,21 @@ export default function Shooter() {
             <h1>Duo Space Shooter</h1>
             <p>Two pilots share the screen. Defend the zone, dodge falling enemies, and score points together.</p>
           </div>
-          <button className="spin-button" type="button" onClick={startGame}>
-            {status === "playing" ? "Restart" : "Start"}
-          </button>
+          <div className="bj-header-actions">
+            <RulesModal title="Duo Space Shooter">
+              <p><strong>Goal:</strong> Two players defend the zone together — survive the enemy waves and rack up points.</p>
+              <ul>
+                <li>Enter each pilot's name, then press <strong>Start</strong>.</li>
+                <li><strong>Player 1:</strong> move with <strong>A / D</strong> and fire with <strong>W</strong>.</li>
+                <li><strong>Player 2:</strong> move with the <strong>← / →</strong> arrow keys and fire with <strong>↑</strong>.</li>
+                <li>Shoot down falling enemies for points; don't let them reach you.</li>
+                <li>Your best scores are saved per player name — try to beat them.</li>
+              </ul>
+            </RulesModal>
+            <button className="spin-button" type="button" onClick={startGame}>
+              {status === "playing" ? "Restart" : "Start"}
+            </button>
+          </div>
         </div>
 
         <div className="player-config">

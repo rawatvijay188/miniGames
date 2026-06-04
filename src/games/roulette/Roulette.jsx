@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import { NUMBERS, OUTSIDE_BETS, numColor, spinWheel, settle } from "./rouletteLogic.js";
 
 const INITIAL_BALANCE = 300;
@@ -91,13 +92,25 @@ export default function Roulette() {
             <p className="kicker">European wheel</p>
             <h1>Roulette</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >♪</button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >♪</button>
+            <RulesModal title="Roulette">
+              <p><strong>Goal:</strong> Predict where the ball lands on the European wheel (numbers 0–36).</p>
+              <ul>
+                <li>Place a bet on an <strong>outside</strong> option — red/black, odd/even, or high/low — which pays <strong>1:1</strong>.</li>
+                <li>Or bet <strong>straight-up</strong> on a single number for a <strong>35:1</strong> payout.</li>
+                <li>Press <strong>Spin</strong> and the wheel picks a winning number.</li>
+                <li>The green <strong>0</strong> is neither red/black nor odd/even — outside bets lose when it hits.</li>
+                <li>Higher risk (single numbers) means a much bigger reward.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Score">

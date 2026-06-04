@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
+import RulesModal from "../../components/RulesModal.jsx";
 import { isValidRange, MAX_ALLOWED_RANGE, MIN_ALLOWED_RANGE, pickTarget, STARTING_ATTEMPTS } from "./numberRushLogic.js";
 
 const INITIAL_MIN_RANGE = 1;
@@ -65,9 +66,23 @@ export default function NumberRush() {
     <main className="shell">
       <section className="mini-game" aria-label="Number Rush game">
         <GameNav />
-        <header className="mini-header">
-          <p className="kicker">Puzzle run</p>
-          <h1>Number Rush</h1>
+        <header className="mini-header bj-header">
+          <div>
+            <p className="kicker">Puzzle run</p>
+            <h1>Number Rush</h1>
+          </div>
+          <div className="bj-header-actions">
+            <RulesModal title="Number Rush">
+              <p><strong>Goal:</strong> Guess the hidden number in as few tries as possible.</p>
+              <ul>
+                <li>A secret number is picked inside your chosen <strong>range</strong>.</li>
+                <li>Type a guess and submit. The game tells you <strong>"Higher"</strong> or <strong>"Lower"</strong>.</li>
+                <li>Use those hints to zero in on the answer before your <strong>attempts</strong> run out.</li>
+                <li>Guess it in time to grow your <strong>streak</strong>; run out and the streak resets.</li>
+                <li>Adjust the min/max range to make it easier or harder.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="score-strip" aria-label="Round status">

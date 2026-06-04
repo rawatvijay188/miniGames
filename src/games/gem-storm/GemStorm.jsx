@@ -3,6 +3,7 @@ import GameNav from "../../components/GameNav.jsx";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
+import RulesModal from "../../components/RulesModal.jsx";
 import { REELS, ROWS, GEMS, WILD, randomGrid, expandWilds, evaluate } from "./gemLogic.js";
 
 const INITIAL_BALANCE = 500;
@@ -42,9 +43,17 @@ export default function GemStorm() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
+    // Spin animation: rapidly cycle random gems to build anticipation.
+    const SPIN_TICKS = 16;
+    for (let i = 0; i < SPIN_TICKS; i += 1) {
+      setGrid(randomGrid());
+      playTone(soundOn, 300 + (i % 5) * 40, 0.02);
+      await sleep(95);
+    }
+
     let working = randomGrid();
     setGrid(working);
-    await sleep(420);
+    await sleep(320);
 
     const { grid: expandedGrid, expandedCols } = expandWilds(working);
     if (expandedCols.size > 0) {
@@ -82,15 +91,27 @@ export default function GemStorm() {
             <p className="kicker">Expanding wilds</p>
             <h1>Gem Storm</h1>
           </div>
-          <button
-            className={`icon-button ${soundOn ? "" : "is-muted"}`}
-            type="button"
-            onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-            aria-label="Toggle sound"
-            title="Toggle sound"
-          >
-            ♪
-          </button>
+          <div className="bj-header-actions">
+            <button
+              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              type="button"
+              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              aria-label="Toggle sound"
+              title="Toggle sound"
+            >
+              ♪
+            </button>
+            <RulesModal title="Gem Storm">
+              <p><strong>Goal:</strong> Match gems on adjacent reels — and let diamond wilds expand for big wins.</p>
+              <ul>
+                <li>Set your bet and press <strong>Spin</strong> across the 5 reels.</li>
+                <li>Wins pay <strong>both ways</strong> — 3 or more matching gems on consecutive reels from the left <em>or</em> the right.</li>
+                <li>The <strong>diamond 💎 is wild</strong> and substitutes for any gem.</li>
+                <li>Any reel containing a wild turns into a full <strong>expanding wild</strong>, covering the whole reel.</li>
+                <li>Longer matching runs and higher-value gems (diamond, ruby) pay the most.</li>
+              </ul>
+            </RulesModal>
+          </div>
         </header>
 
         <section className="meters" aria-label="Game totals">
