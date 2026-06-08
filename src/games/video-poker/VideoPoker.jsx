@@ -5,8 +5,8 @@ import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
 import { buildDeck, shuffle, evaluateHand, HAND_RANKS } from "./pokerLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -45,7 +45,7 @@ function CardSlot({ card, held, phase, onToggle }) {
 }
 
 export default function VideoPoker() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [hand, setHand] = useState([null, null, null, null, null]);
   const [drawDeck, setDrawDeck] = useState([]);
@@ -145,7 +145,7 @@ export default function VideoPoker() {
 
   const refill = () => {
     playTone(soundOn, 320, 0.05);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setPhase("betting");
     setHand([null, null, null, null, null]);

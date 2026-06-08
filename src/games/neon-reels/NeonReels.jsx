@@ -8,8 +8,8 @@ import { sleep } from "../../utils/timing.js";
 import ReelSymbol from "./ReelSymbol.jsx";
 import { scoreReels } from "./scoring.js";
 import { symbolById, weightedSymbol } from "./symbols.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 500;
 const INITIAL_BET = 25;
 const MIN_BET = 5;
 const MAX_BET = 100;
@@ -20,7 +20,7 @@ function clampBet(nextBet, balance) {
 }
 
 export default function NeonReels() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState("Ready");

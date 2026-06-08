@@ -5,8 +5,8 @@ import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
 import { generateCard, evaluateCard, SYMBOLS } from "./scratchLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -29,7 +29,7 @@ function partialWinRows(cells, rev) {
 }
 
 export default function ScratchCard() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [card, setCard] = useState(() => generateCard());
   const [revealed, setRevealed] = useState(new Set());
@@ -119,7 +119,7 @@ export default function ScratchCard() {
 
   const refill = () => {
     playTone(soundOn, 320, 0.05);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setPhase("buying");
     setTotalWin(0);

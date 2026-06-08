@@ -4,8 +4,8 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -34,7 +34,7 @@ function clampBet(nextBet, balance) {
 }
 
 export default function LuckyWheel() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);

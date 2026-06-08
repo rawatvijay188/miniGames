@@ -4,8 +4,8 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import { NUMBERS, MAX_PICKS, PAY_TABLE, drawNumbers, calcPayout } from "./kenoLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -16,7 +16,7 @@ function clampBet(next, balance) {
 }
 
 export default function Keno() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [picks, setPicks] = useState(new Set());
   const [drawn, setDrawn] = useState([]);
@@ -108,7 +108,7 @@ export default function Keno() {
 
   const refill = () => {
     playTone(soundOn, 320, 0.05);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setPicks(new Set());
     setDrawn([]);

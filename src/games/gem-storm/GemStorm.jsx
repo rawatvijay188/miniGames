@@ -5,8 +5,8 @@ import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
 import { REELS, ROWS, GEMS, WILD, randomGrid, expandWilds, evaluate } from "./gemLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 500;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -18,7 +18,7 @@ function clampBet(nextBet, balance) {
 
 export default function GemStorm() {
   const [grid, setGrid] = useState(randomGrid);
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
   const [winCells, setWinCells] = useState(new Set());

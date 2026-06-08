@@ -5,8 +5,8 @@ import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
 import { NUMBERS, OUTSIDE_BETS, numColor, spinWheel, settle } from "./rouletteLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -17,7 +17,7 @@ function clampBet(next, balance) {
 }
 
 export default function Roulette() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [selection, setSelection] = useState("red");
   const [result, setResult] = useState(null);

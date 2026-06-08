@@ -4,8 +4,8 @@ import RulesModal from "../../components/RulesModal.jsx";
 import { money } from "../../utils/format.js";
 import DiceSide from "./DiceSide.jsx";
 import { rollDie } from "./diceConfig.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -17,7 +17,7 @@ function clampBet(nextBet, balance) {
 }
 
 export default function DiceDuel() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [result, setResult] = useState("Ready");
   const [rolling, setRolling] = useState(false);

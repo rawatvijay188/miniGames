@@ -3,9 +3,9 @@ import { navigateTo } from "../utils/navigation.js";
 export default function GameCard({ route, artClassName = "", kicker, title, description, children }) {
   return (
     <button className="game-card" type="button" onClick={() => navigateTo(route)}>
-      <span className={`game-art ${artClassName}`} aria-hidden="true">
+      <div className={`game-art ${artClassName}`} aria-hidden="true">
         {children}
-      </span>
+      </div>
       <div>
         <p className="kicker">{kicker}</p>
         <h2>{title}</h2>

@@ -11,8 +11,8 @@ import {
   DEALER_STANDS_ON,
   BLACKJACK
 } from "./deck.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -54,7 +54,7 @@ function Hand({ label, cards, total, hideHole, flash }) {
 }
 
 export default function Blackjack() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [deck, setDeck] = useState([]);
   const [player, setPlayer] = useState([]);
@@ -262,7 +262,7 @@ export default function Blackjack() {
   const refill = () => {
     playClick();
     setResult(null);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setPhase("betting");
     setPlayer([]);

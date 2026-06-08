@@ -4,8 +4,8 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -16,7 +16,7 @@ function clampBet(nextBet, balance) {
 }
 
 export default function CoinFlipStreak() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [streak, setStreak] = useState(0);
   const [pot, setPot] = useState(0); // current winnings riding on the streak
@@ -91,7 +91,7 @@ export default function CoinFlipStreak() {
 
   const refill = () => {
     playTone(soundOn, 320, 0.05);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setStreak(0);
     setPot(0);

@@ -4,8 +4,8 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 300;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -42,7 +42,7 @@ function CardFace({ card, flash }) {
 }
 
 export default function HighCardWar() {
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance, refillWallet } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [player, setPlayer] = useState(null);
   const [dealer, setDealer] = useState(null);
@@ -102,7 +102,7 @@ export default function HighCardWar() {
 
   const refill = () => {
     playTone(soundOn, 320, 0.05);
-    setBalance(INITIAL_BALANCE);
+    refillWallet();
     setBet(INITIAL_BET);
     setResult(null);
     setPlayer(null);

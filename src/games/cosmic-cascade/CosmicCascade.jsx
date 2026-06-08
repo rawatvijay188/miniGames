@@ -13,8 +13,8 @@ import {
   collapse,
   cascadePayout
 } from "./cascadeLogic.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 500;
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
@@ -27,7 +27,7 @@ function clampBet(nextBet, balance) {
 
 export default function CosmicCascade() {
   const [grid, setGrid] = useState(randomGrid);
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
   const [multiplier, setMultiplier] = useState(1);

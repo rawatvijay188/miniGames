@@ -6,8 +6,8 @@ import Meter from "../../components/Meter.jsx";
 import { playTone } from "../../utils/audio.js";
 import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
+import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BALANCE = 600;
 const INITIAL_BET = 30;
 const MIN_BET = 10;
 const MAX_BET = 120;
@@ -152,7 +152,7 @@ export default function KingQueenMinisterThief() {
   const appRef = useRef(null);
   const reelRefs = useRef([]);
   const spinTimeouts = useRef([]);
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { balance, setBalance } = useCoins();
   const [bet, setBet] = useState(INITIAL_BET);
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState("Ready to spin");
