@@ -8,15 +8,22 @@ import { sleep } from "../../utils/timing.js";
 import ReelSymbol from "./ReelSymbol.jsx";
 import { scoreReels } from "./scoring.js";
 import { symbolById, weightedSymbol } from "./symbols.js";
+import { useSpinEasing } from "../../hooks/useSpinEasing.js";
 import { useCoins } from "../../context/CoinContext.jsx";
 
 const INITIAL_BET = 25;
 const MIN_BET = 5;
 const MAX_BET = 100;
+const STRIP_LENGTH = 6;
 
 function clampBet(nextBet, balance) {
   const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
   return Math.min(max, Math.max(MIN_BET, nextBet));
+}
+
+// A strip of random symbols used purely for the spinning animation.
+function makeStrip() {
+  return Array.from({ length: STRIP_LENGTH }, () => weightedSymbol());
 }
 
 export default function NeonReels() {
@@ -25,9 +32,17 @@ export default function NeonReels() {
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState("Ready");
   const [reels, setReels] = useState(() => [weightedSymbol(), weightedSymbol(), weightedSymbol()]);
+  const [rolling, setRolling] = useState([false, false, false]);
+  const [strips, setStrips] = useState(() => [makeStrip(), makeStrip(), makeStrip()]);
   const [spinning, setSpinning] = useState(false);
   const [winning, setWinning] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  // Dev controls: seconds per revolution, and how long the first reel rolls (ms).
+  const [rollDuration, setRollDuration] = useState(0.34);
+  const [spinTime, setSpinTime] = useState(700);
+
+  // Inject sine-eased spin keyframes
+  useSpinEasing();
 
   const updateBet = (nextBet, nextBalance = balance) => {
     setBet(clampBet(nextBet, nextBalance));
@@ -43,20 +58,22 @@ export default function NeonReels() {
     setBanner("Spinning");
     playTone(soundOn, 220);
 
+    // Fresh symbol strips and start every reel revolving.
+    setStrips([makeStrip(), makeStrip(), makeStrip()]);
+    setRolling([true, true, true]);
+
     const result = [];
 
     for (let index = 0; index < reels.length; index += 1) {
-      const ticker = setInterval(() => {
-        setReels((current) => current.map((symbol, reelIndex) => (reelIndex === index ? weightedSymbol() : symbol)));
-      }, 90);
-
-      await sleep(900 + index * 420);
-      clearInterval(ticker);
+      await sleep(spinTime + index * Math.round(spinTime * 0.55));
 
       const forcedSymbol = forcedIds?.[index] ? symbolById(forcedIds[index]) : null;
       const nextSymbol = forcedSymbol || weightedSymbol();
       result.push(nextSymbol);
+
+      // Stop this reel: snap it to its final symbol.
       setReels((current) => current.map((symbol, reelIndex) => (reelIndex === index ? nextSymbol : symbol)));
+      setRolling((current) => current.map((isRolling, reelIndex) => (reelIndex === index ? false : isRolling)));
       playTone(soundOn, 300 + index * 90);
     }
 
@@ -121,10 +138,28 @@ export default function NeonReels() {
 
         <section className="reel-window" aria-live="polite">
           <div className="payline" aria-hidden="true"></div>
-          <div className="reels">
+          <div
+            className="reels"
+            style={{
+              "--reel-roll-duration": `${rollDuration}s`,
+              // Ease off the motion blur as the reel slows, so the upward
+              // travel stays crisp when slowed down for inspection.
+              "--reel-roll-blur": `${Math.max(0, 1.4 - (rollDuration - 0.4) * 1.6).toFixed(2)}px`
+            }}
+          >
             {reels.map((symbol, index) => (
-              <div className={`reel ${spinning ? "is-spinning" : ""} ${winning ? "is-winning" : ""}`} key={`${symbol.id}-${index}`}>
-                <ReelSymbol symbol={symbol} />
+              <div className={`reel ${rolling[index] ? "is-rolling" : ""} ${winning ? "is-winning" : ""}`} key={index}>
+                {rolling[index] ? (
+                  <div className="reel-strip">
+                    {[...strips[index], ...strips[index]].map((stripSymbol, cellIndex) => (
+                      <div className="reel-cell" key={cellIndex}>
+                        <ReelSymbol symbol={stripSymbol} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ReelSymbol symbol={symbol} />
+                )}
               </div>
             ))}
           </div>
@@ -145,6 +180,29 @@ export default function NeonReels() {
           <div><span>3 Sevens</span><strong>8x</strong></div>
           <div><span>3 Gems</span><strong>6x</strong></div>
           <div><span>Any pair</span><strong>2x</strong></div>
+        </section>
+
+        <section className="test-panel" aria-label="Dev reel speed">
+          <span>Revolution {rollDuration.toFixed(2)}s</span>
+          <input
+            type="range"
+            min="0.1"
+            max="2"
+            step="0.05"
+            value={rollDuration}
+            onChange={(event) => setRollDuration(Number(event.target.value))}
+            aria-label="Seconds per reel revolution"
+          />
+          <span>Spin {(spinTime / 1000).toFixed(1)}s</span>
+          <input
+            type="range"
+            min="400"
+            max="5000"
+            step="100"
+            value={spinTime}
+            onChange={(event) => setSpinTime(Number(event.target.value))}
+            aria-label="Reel spin duration"
+          />
         </section>
 
         <section className="test-panel" aria-label="Test outcomes">

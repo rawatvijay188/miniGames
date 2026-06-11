@@ -17,8 +17,10 @@ import PlinkoDrop from "./games/plinko-drop/PlinkoDrop.jsx";
 import HighCardWar from "./games/high-card-war/HighCardWar.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
 import GameHub from "./pages/GameHub.jsx";
+import SlotGames from "./pages/SlotGames.jsx";
 
 const routes = {
+  "slot-games": SlotGames,
   "dice-duel": DiceDuel,
   "neon-reels": NeonReels,
   "number-rush": NumberRush,

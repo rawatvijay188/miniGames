@@ -4,12 +4,20 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
+import SpinningReels, { toVisualColumns } from "../../components/SpinningReels.jsx";
+import { useSpinEasing } from "../../hooks/useSpinEasing.js";
+import { defaultSpinSteps } from "../../utils/reelEasing.js";
+import { buildReelStrips, stopReelsSequentially } from "../../utils/reelSpin.js";
 import { REELS, ROWS, GEMS, WILD, randomGrid, expandWilds, evaluate } from "./gemLogic.js";
 import { useCoins } from "../../context/CoinContext.jsx";
 
 const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
+const STRIP_LEN = 12; // random symbols per reel during the scroll
+const FIRST_STOP_MS = 520; // when the first reel stops
+const STOP_GAP_MS = 230; // extra delay before each later reel stops
+const REVEAL_MS = 240; // settle pause before the result grid is shown
 
 function clampBet(nextBet, balance) {
   const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
@@ -26,6 +34,14 @@ export default function GemStorm() {
   const [message, setMessage] = useState("Spin for expanding wild gems.");
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  // While set, the reels are scrolling: { columns, strips }. rolling[reel] is
+  // true until that reel stops.
+  const [reelSpin, setReelSpin] = useState(null);
+  const [rolling, setRolling] = useState([]);
+  const [spinSteps, setSpinSteps] = useState([]);
+
+  // Inject sine-eased spin keyframes
+  useSpinEasing();
 
   const updateBet = (next) => {
     if (busy) return;
@@ -43,17 +59,31 @@ export default function GemStorm() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
-    // Spin animation: rapidly cycle random gems to build anticipation.
-    const SPIN_TICKS = 16;
-    for (let i = 0; i < SPIN_TICKS; i += 1) {
-      setGrid(randomGrid());
-      playTone(soundOn, 300 + (i % 5) * 40, 0.02);
-      await sleep(95);
-    }
-
+    // Decide the result up front, then scroll the reels to land on it.
     let working = randomGrid();
+
+    // gem-grid renders row-major (outer ROWS, inner REELS); flatten in that
+    // same order so the stopped reels line up with the revealed grid.
+    const flat = [];
+    for (let row = 0; row < ROWS; row += 1) {
+      for (let reel = 0; reel < REELS; reel += 1) flat.push(working[reel][row]);
+    }
+    setReelSpin({ columns: toVisualColumns(flat, REELS), strips: buildReelStrips(REELS, STRIP_LEN, randomGrid) });
+    setSpinSteps(defaultSpinSteps(REELS));
+
+    await stopReelsSequentially({
+      reelCount: REELS,
+      firstStopMs: FIRST_STOP_MS,
+      stopGapMs: STOP_GAP_MS,
+      setRolling,
+      onStop: (reel) => playTone(soundOn, 300 + reel * 70, 0.05)
+    });
+
+    await sleep(REVEAL_MS);
     setGrid(working);
-    await sleep(320);
+    setReelSpin(null);
+    setRolling([]);
+    setSpinSteps([]);
 
     const { grid: expandedGrid, expandedCols } = expandWilds(working);
     if (expandedCols.size > 0) {
@@ -106,7 +136,7 @@ export default function GemStorm() {
               <ul>
                 <li>Set your bet and press <strong>Spin</strong> across the 5 reels.</li>
                 <li>Wins pay <strong>both ways</strong> — 3 or more matching gems on consecutive reels from the left <em>or</em> the right.</li>
-                <li>The <strong>diamond 💎 is wild</strong> and substitutes for any gem.</li>
+                <li>The <strong>cyan diamond (WILD)</strong> substitutes for any gem.</li>
                 <li>Any reel containing a wild turns into a full <strong>expanding wild</strong>, covering the whole reel.</li>
                 <li>Longer matching runs and higher-value gems (diamond, ruby) pay the most.</li>
               </ul>
@@ -120,18 +150,22 @@ export default function GemStorm() {
           <div className="meter"><span>Last Win</span><strong>{money(lastWin)}</strong></div>
         </section>
 
-        <section className="gem-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${REELS}, 1fr)` }}>
-          {Array.from({ length: ROWS }).map((_, row) =>
-            Array.from({ length: REELS }).map((__, reel) => {
-              const sym = grid[reel][row];
-              const isWin = winCells.has(`${reel}-${row}`);
-              const isWild = sym.wild;
-              return (
-                <div key={`${reel}-${row}`} className={`cascade-cell ${isWin ? "is-win" : ""} ${isWild ? "is-wild" : ""}`}>
-                  <span>{sym.emoji}</span>
-                </div>
-              );
-            })
+        <section className="gem-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${REELS}, 1fr)`, "--reel-roll-duration": "0.34s" }}>
+          {reelSpin ? (
+            <SpinningReels columns={reelSpin.columns} strips={reelSpin.strips} rolling={rolling} rows={ROWS} spinSteps={spinSteps} durationScale={0.34} />
+          ) : (
+            Array.from({ length: ROWS }).map((_, row) =>
+              Array.from({ length: REELS }).map((__, reel) => {
+                const sym = grid[reel][row];
+                const isWin = winCells.has(`${reel}-${row}`);
+                const isWild = sym.wild;
+                return (
+                  <div key={`${reel}-${row}`} className={`cascade-cell ${isWin ? "is-win" : ""} ${isWild ? "is-wild" : ""}`}>
+                    <span dangerouslySetInnerHTML={{ __html: sym.svg }} />
+                  </div>
+                );
+              })
+            )
           )}
         </section>
 
@@ -148,9 +182,9 @@ export default function GemStorm() {
 
         <section className="paytable" aria-label="Paytable">
           {GEMS.map((g) => (
-            <div key={g.id}><span>{g.emoji}</span><strong>{g.value}x</strong></div>
+            <div key={g.id}><span dangerouslySetInnerHTML={{ __html: g.svg }} style={{ width: "2rem", height: "2rem", display: "block" }} /><strong>{g.value}x</strong></div>
           ))}
-          <div><span>{WILD.emoji}</span><strong>Wild</strong></div>
+          <div><span dangerouslySetInnerHTML={{ __html: WILD.svg }} style={{ width: "2rem", height: "2rem", display: "block" }} /><strong>Wild</strong></div>
         </section>
       </section>
     </main>

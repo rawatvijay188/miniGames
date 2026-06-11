@@ -4,6 +4,10 @@ import { money } from "../../utils/format.js";
 import { sleep } from "../../utils/timing.js";
 import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
+import SpinningReels, { toVisualColumns } from "../../components/SpinningReels.jsx";
+import { useSpinEasing } from "../../hooks/useSpinEasing.js";
+import { defaultSpinSteps } from "../../utils/reelEasing.js";
+import { buildReelStrips, stopReelsSequentially } from "../../utils/reelSpin.js";
 import {
   COLS,
   ROWS,
@@ -19,6 +23,10 @@ const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
 const STEP_MS = 480;
+const STRIP_LEN = 12; // random symbols per reel during the scroll
+const FIRST_STOP_MS = 520; // when the first reel stops
+const STOP_GAP_MS = 210; // extra delay before each later reel stops
+const REVEAL_MS = 240; // settle pause before the result grid is shown
 
 function clampBet(nextBet, balance) {
   const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
@@ -35,6 +43,14 @@ export default function CosmicCascade() {
   const [message, setMessage] = useState("Spin to start the cascade.");
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  // While set, the reels are scrolling: { columns, strips }. rolling[col] is
+  // true until that reel stops.
+  const [reelSpin, setReelSpin] = useState(null);
+  const [rolling, setRolling] = useState([]);
+  const [spinSteps, setSpinSteps] = useState([]);
+
+  // Inject sine-eased spin keyframes
+  useSpinEasing();
 
   const updateBet = (next) => {
     if (busy) return;
@@ -52,17 +68,31 @@ export default function CosmicCascade() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
-    // Spin animation: rapidly cycle random symbols to build anticipation.
-    const SPIN_TICKS = 16;
-    for (let i = 0; i < SPIN_TICKS; i += 1) {
-      setGrid(randomGrid());
-      playTone(soundOn, 300 + (i % 5) * 40, 0.02);
-      await sleep(95);
-    }
-
+    // Decide the result up front, then scroll the reels to land on it. The
+    // game grid is stored as columns of rows (`grid[col][row]`), but
+    // `toVisualColumns` expects a row-major flat list, so build the flat array
+    // row by row.
     let working = randomGrid();
+    const flat = [];
+    for (let r = 0; r < ROWS; r += 1) {
+      for (let c = 0; c < COLS; c += 1) flat.push(working[c][r]);
+    }
+    setReelSpin({ columns: toVisualColumns(flat, COLS), strips: buildReelStrips(COLS, STRIP_LEN, randomGrid) });
+    setSpinSteps(defaultSpinSteps(COLS));
+
+    await stopReelsSequentially({
+      reelCount: COLS,
+      firstStopMs: FIRST_STOP_MS,
+      stopGapMs: STOP_GAP_MS,
+      setRolling,
+      onStop: (c) => playTone(soundOn, 300 + c * 60, 0.05)
+    });
+
+    await sleep(REVEAL_MS);
     setGrid(working);
-    await sleep(320);
+    setReelSpin(null);
+    setRolling([]);
+    setSpinSteps([]);
 
     const betUnit = bet / 10;
     let totalWin = 0;
@@ -143,16 +173,20 @@ export default function CosmicCascade() {
           <div className="meter"><span>Last Win</span><strong>{money(lastWin)}</strong></div>
         </section>
 
-        <section className="cascade-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-          {grid.map((col, c) =>
-            col.map((symbol, r) => (
-              <div
-                key={`${c}-${r}`}
-                className={`cascade-cell ${winSet.has(symbol.id) ? "is-win" : ""}`}
-              >
-                <span>{symbol.emoji}</span>
-              </div>
-            ))
+        <section className="cascade-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, "--reel-roll-duration": "0.34s" }}>
+          {reelSpin ? (
+            <SpinningReels columns={reelSpin.columns} strips={reelSpin.strips} rolling={rolling} rows={ROWS} spinSteps={spinSteps} durationScale={0.34} />
+          ) : (
+            grid.map((col, c) =>
+              col.map((symbol, r) => (
+                <div
+                  key={`${c}-${r}`}
+                  className={`cascade-cell ${winSet.has(symbol.id) ? "is-win" : ""}`}
+                >
+                  <span dangerouslySetInnerHTML={{ __html: symbol.svg }} />
+                </div>
+              ))
+            )
           )}
         </section>
 
@@ -171,7 +205,7 @@ export default function CosmicCascade() {
 
         <section className="paytable" aria-label="Paytable">
           {SYMBOLS.map((s) => (
-            <div key={s.id}><span>{s.emoji}</span><strong>{s.value}</strong></div>
+            <div key={s.id}><span dangerouslySetInnerHTML={{ __html: s.svg }} style={{ width: "2rem", height: "2rem", display: "block" }} /><strong>{s.value}</strong></div>
           ))}
         </section>
       </section>
