@@ -14,7 +14,7 @@
 
 | # | Task | Owner | Priority | Status |
 |---|------|-------|----------|--------|
-| 1.1 | Write & host a **Privacy Policy** (public URL required by Play Console) | 🤝 | P0 | ☐ |
+| 1.1 | Write & host a **Privacy Policy** (public URL required by Play Console) | 🤝 | P0 | ◐ |
 | 1.2 | Design & install **app icon** (512×512, replace default Capacitor icons) | 👤 | P0 | ☐ |
 | 1.3 | Create **feature graphic** (1024×500) | 👤 | P0 | ☐ |
 | 1.4 | Capture **phone screenshots** (4–8, min 320px) | 👤 | P0 | ☐ |
@@ -64,6 +64,13 @@
 3. **Coin-logic tests** (2.1) — protects the in-game economy.
 4. **Design assets** (1.2–1.4, 3.3) — your task; needed for the listing.
 5. **Content rating + signed AAB** (1.5, 1.6) — final steps before upload.
+
+## Privacy Policy (Task 1.1) — notes
+- **Page written:** `public/privacy-policy.html` (self-contained, mobile-friendly, dark theme).
+- **Accurate to the app:** collects no personal data; only on-device localStorage (wallet, high scores, optional nicknames). No ads, analytics, or third parties.
+- **Live URL (after merge to `main`):** `https://rawatvijay188.github.io/miniGames/privacy-policy.html`
+  - The Pages deploy workflow runs on `main` / `firstAppDeployment`, so the URL goes live once this is merged to `main` (or run the workflow manually).
+- **Remaining for you:** verify the contact email (`rawatvijay1051@gmail.com`) is correct, then paste the live URL into Play Console → Store listing → Privacy policy.
 
 ## Definition of "ready to submit"
 All of **Section 1** ☑ · all of **Section 2** ☑ · Section 3 ☑.
