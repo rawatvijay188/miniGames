@@ -1,6 +1,7 @@
 import GameCard from "../components/GameCard.jsx";
 import WalletBar from "../components/WalletBar.jsx";
 import NeonReelsArt from "../components/art/NeonReelsArt.jsx";
+import PassAndPlayArt from "../components/art/PassAndPlayArt.jsx";
 
 export default function GameHub() {
   return (
@@ -23,6 +24,10 @@ export default function GameHub() {
       <section className="category-grid" aria-label="Game categories">
         <GameCard route="slot-games" kicker="17 games inside" title="Slot Games" description="Classic reels, puzzle tumbles, card tables and more — all in one deck.">
           <NeonReelsArt />
+        </GameCard>
+
+        <GameCard route="pass-and-play" kicker="2 players · one device" title="Pass &amp; Play" description="Head-to-head games for two. Take turns on one screen and challenge a friend.">
+          <PassAndPlayArt />
         </GameCard>
       </section>
     </main>

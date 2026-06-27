@@ -15,12 +15,18 @@ import CoinFlipStreak from "./games/coin-flip-streak/CoinFlipStreak.jsx";
 import LuckyWheel from "./games/lucky-wheel/LuckyWheel.jsx";
 import PlinkoDrop from "./games/plinko-drop/PlinkoDrop.jsx";
 import HighCardWar from "./games/high-card-war/HighCardWar.jsx";
+import TicTacToe from "./games/tic-tac-toe/TicTacToe.jsx";
+import NeonSnakeDuel from "./games/neon-snake-duel/NeonSnakeDuel.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
 import GameHub from "./pages/GameHub.jsx";
 import SlotGames from "./pages/SlotGames.jsx";
+import PassAndPlay from "./pages/PassAndPlay.jsx";
 
 const routes = {
   "slot-games": SlotGames,
+  "pass-and-play": PassAndPlay,
+  "tic-tac-toe": TicTacToe,
+  "neon-snake-duel": NeonSnakeDuel,
   "dice-duel": DiceDuel,
   "neon-reels": NeonReels,
   "number-rush": NumberRush,
