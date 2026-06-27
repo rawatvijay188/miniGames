@@ -1,0 +1,70 @@
+# Mini Games Arcade — Deployment Checklist
+
+**App:** Mini Games Arcade · `com.rawatvijay.minigames`
+**Stack:** React 19 · Vite 7 · Capacitor 8 · PixiJS 8
+**Target:** Google Play Store (Android first) → Apple App Store (later)
+**Golden rule:** Virtual coins only. No real money. No payouts. Ever.
+
+**Legend:** ☐ Not started · ◐ In progress · ☑ Done
+**Owner:** 👤 You (manual/design/account) · 🤖 Claude (code) · 🤝 Both
+
+---
+
+## 1. Release Blockers — Play Store rejects without these
+
+| # | Task | Owner | Priority | Status |
+|---|------|-------|----------|--------|
+| 1.1 | Write & host a **Privacy Policy** (public URL required by Play Console) | 🤝 | P0 | ☐ |
+| 1.2 | Design & install **app icon** (512×512, replace default Capacitor icons) | 👤 | P0 | ☐ |
+| 1.3 | Create **feature graphic** (1024×500) | 👤 | P0 | ☐ |
+| 1.4 | Capture **phone screenshots** (4–8, min 320px) | 👤 | P0 | ☐ |
+| 1.5 | Complete **content rating** questionnaire → 17+ (simulated gambling) | 👤 | P0 | ☐ |
+| 1.6 | Generate **signed release AAB** + back up keystore securely | 👤 | P0 | ☐ |
+
+## 2. Quality Gate — correctness before shipping
+
+| # | Task | Owner | Priority | Status |
+|---|------|-------|----------|--------|
+| 2.1 | Add **Vitest** + tests for coin logic (payouts, daily bonus, refill) | 🤖 | P1 | ☐ |
+| 2.2 | **Play-test all 19 games** end-to-end; verify payouts & no soft-locks | 👤 | P1 | ☐ |
+| 2.3 | Audit for **any real-money path** (links, IAP, payments) — must be none | 🤝 | P1 | ☐ |
+| 2.4 | Verify layouts at **360–430px** width; touch targets ≥ 44×44px | 👤 | P1 | ☐ |
+
+## 3. Polish & Branding — fix before public listing
+
+| # | Task | Owner | Priority | Status |
+|---|------|-------|----------|--------|
+| 3.1 | Fix stale **"17 games inside"** copy → 19 in `GameHub.jsx` | 🤖 | P2 | ☐ |
+| 3.2 | Rename package **`slot-game-hub` → mini-games-arcade**; align app label | 🤖 | P2 | ☐ |
+| 3.3 | Replace **splash screen** (remove default Capacitor splash) | 👤 | P2 | ☐ |
+| 3.4 | Write **store listing copy** (title, short + full description) | 👤 | P2 | ☐ |
+| 3.5 | Add review note: *"Virtual coins only. No real money. No payouts."* | 👤 | P2 | ☐ |
+
+## 4. Performance & Hardening — nice to have
+
+| # | Task | Owner | Priority | Status |
+|---|------|-------|----------|--------|
+| 4.1 | **Code-split** the 637 kB JS bundle (lazy-load games) | 🤖 | P3 | ☐ |
+| 4.2 | Test on a **real low-end Android** device | 👤 | P3 | ☐ |
+| 4.3 | Run `npm run cap:sync` and smoke-test the **Android build** | 🤝 | P3 | ☐ |
+
+## 5. Post-Android — iOS (deferred)
+
+| # | Task | Owner | Priority | Status |
+|---|------|-------|----------|--------|
+| 5.1 | `npm install @capacitor/ios` + `npx cap add ios` | 🤖 | P4 | ☐ |
+| 5.2 | iOS icon (1024×1024, no alpha) + iPhone/iPad screenshots | 👤 | P4 | ☐ |
+| 5.3 | Archive & upload via Xcode (needs Mac + Apple Developer $99/yr) | 👤 | P4 | ☐ |
+
+---
+
+## Recommended order of work
+1. **Quick code wins** (3.1, 3.2) — fast, low-risk, I can do now.
+2. **Privacy policy** (1.1) — unblocks the single most common rejection.
+3. **Coin-logic tests** (2.1) — protects the in-game economy.
+4. **Design assets** (1.2–1.4, 3.3) — your task; needed for the listing.
+5. **Content rating + signed AAB** (1.5, 1.6) — final steps before upload.
+
+## Definition of "ready to submit"
+All of **Section 1** ☑ · all of **Section 2** ☑ · Section 3 ☑.
+Sections 4–5 may ship in a later update.
