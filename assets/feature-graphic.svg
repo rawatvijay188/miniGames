@@ -1,0 +1,27 @@
+<svg width="1024" height="500" viewBox="0 0 1024 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1147"/>
+      <stop offset="1" stop-color="#0b0d1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.22" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#3a2480" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#3a2480" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <rect width="1024" height="500" fill="url(#glow)"/>
+
+  <!-- 2x2 neon grid mark (left) -->
+  <g transform="translate(110,140) scale(0.42)">
+    <circle cx="0"   cy="0"   r="120" fill="#5ad1ff"/>
+    <circle cx="240" cy="0"   r="120" fill="#ff5cc8"/>
+    <circle cx="0"   cy="240" r="120" fill="#ffce5a"/>
+    <circle cx="240" cy="240" r="120" fill="#5affa9"/>
+  </g>
+
+  <!-- wordmark (right) -->
+  <text x="365" y="232" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" fill="#ffffff">Mini Games</text>
+  <text x="365" y="316" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" fill="#5ad1ff">Arcade</text>
+  <text x="368" y="372" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="400" fill="#a3a9c9">19 games · Virtual coins only · No real money</text>
+</svg>

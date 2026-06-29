@@ -15,8 +15,8 @@
 | # | Task | Owner | Priority | Status |
 |---|------|-------|----------|--------|
 | 1.1 | Write & host a **Privacy Policy** (public URL required by Play Console) | 🤝 | P0 | ◐ |
-| 1.2 | Design & install **app icon** (512×512, replace default Capacitor icons) | 👤 | P0 | ☐ |
-| 1.3 | Create **feature graphic** (1024×500) | 👤 | P0 | ☐ |
+| 1.2 | Design & install **app icon** (512×512, replace default Capacitor icons) | 🤝 | P0 | ◐ |
+| 1.3 | Create **feature graphic** (1024×500) | 🤝 | P0 | ◐ |
 | 1.4 | Capture **phone screenshots** (4–8, min 320px) | 👤 | P0 | ☐ |
 | 1.5 | Complete **content rating** questionnaire → 17+ (simulated gambling) | 👤 | P0 | ☐ |
 | 1.6 | Generate **signed release AAB** + back up keystore securely | 👤 | P0 | ☐ |
@@ -25,7 +25,7 @@
 
 | # | Task | Owner | Priority | Status |
 |---|------|-------|----------|--------|
-| 2.1 | Add **Vitest** + tests for coin logic (payouts, daily bonus, refill) | 🤖 | P1 | ☐ |
+| 2.1 | Add **Vitest** + tests for coin logic (payouts, daily bonus, refill) | 🤖 | P1 | ☑ |
 | 2.2 | **Play-test all 19 games** end-to-end; verify payouts & no soft-locks | 👤 | P1 | ☐ |
 | 2.3 | Audit for **any real-money path** (links, IAP, payments) — must be none | 🤝 | P1 | ☐ |
 | 2.4 | Verify layouts at **360–430px** width; touch targets ≥ 44×44px | 👤 | P1 | ☐ |
@@ -34,8 +34,8 @@
 
 | # | Task | Owner | Priority | Status |
 |---|------|-------|----------|--------|
-| 3.1 | Fix stale **"17 games inside"** copy → 19 in `GameHub.jsx` | 🤖 | P2 | ☐ |
-| 3.2 | Rename package **`slot-game-hub` → mini-games-arcade**; align app label | 🤖 | P2 | ☐ |
+| 3.1 | ~~Fix stale "17 games inside" copy~~ — verified correct (17 slot games + 2 pass-and-play = 19 total) | 🤖 | P2 | ☑ |
+| 3.2 | Rename package **`slot-game-hub` → mini-games-arcade**; align app label | 🤖 | P2 | ☑ |
 | 3.3 | Replace **splash screen** (remove default Capacitor splash) | 👤 | P2 | ☐ |
 | 3.4 | Write **store listing copy** (title, short + full description) | 👤 | P2 | ☐ |
 | 3.5 | Add review note: *"Virtual coins only. No real money. No payouts."* | 👤 | P2 | ☐ |
@@ -71,6 +71,21 @@
 - **Live URL (after merge to `main`):** `https://rawatvijay188.github.io/miniGames/privacy-policy.html`
   - The Pages deploy workflow runs on `main` / `firstAppDeployment`, so the URL goes live once this is merged to `main` (or run the workflow manually).
 - **Remaining for you:** verify the contact email (`rawatvijay1051@gmail.com`) is correct, then paste the live URL into Play Console → Store listing → Privacy policy.
+
+## App Icon & Feature Graphic (Tasks 1.2 / 1.3) — notes
+- **Source art:** editable SVGs in `assets/` (`icon-foreground.svg`, `icon-background.svg`, `feature-graphic.svg`) — a neon 2×2 "mini games" grid on a dark arcade gradient.
+- **Pipeline:** `npm run icons` (sharp) regenerates everything from the SVGs:
+  - all Android densities under `android/app/src/main/res/mipmap-*/` (legacy + round + adaptive foreground)
+  - `public/icon-512.png` (Play Store listing icon)
+  - `public/icon-1024.png` (master / iOS later)
+  - `public/feature-graphic.png` (1024×500)
+- Adaptive-icon background color set to dark `#15123A` (was white).
+- **Status = ◐ provisional:** the art is clean and shippable, but it's a placeholder concept. Swap the SVGs and re-run `npm run icons` if you want custom art before launch. Then use `public/icon-512.png` and `public/feature-graphic.png` in the Play Console listing.
+
+## Coin-Logic Tests (Task 2.1) — notes
+- Pure wallet logic extracted to `src/context/walletCore.js`; `CoinContext.jsx` is now a thin React/localStorage wrapper (public API unchanged — all games still use `useCoins()`).
+- 33 Vitest cases in `src/context/walletCore.test.js` cover streak math, the bankruptcy-refill anti-abuse guard, balance clamping, and corrupt-storage handling.
+- Run with `npm test` (watch) or `npm run test:run` (CI).
 
 ## Definition of "ready to submit"
 All of **Section 1** ☑ · all of **Section 2** ☑ · Section 3 ☑.

@@ -1,0 +1,20 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Neon 2x2 "mini games" grid. Kept inside the central adaptive-icon safe
+       zone so it survives circular / squircle masking on Android. -->
+  <!-- top-left: cyan -->
+  <circle cx="392" cy="392" r="185" fill="#5ad1ff" opacity="0.16"/>
+  <circle cx="392" cy="392" r="120" fill="#5ad1ff"/>
+  <circle cx="360" cy="360" r="34" fill="#ffffff" opacity="0.55"/>
+  <!-- top-right: magenta -->
+  <circle cx="632" cy="392" r="185" fill="#ff5cc8" opacity="0.16"/>
+  <circle cx="632" cy="392" r="120" fill="#ff5cc8"/>
+  <circle cx="600" cy="360" r="34" fill="#ffffff" opacity="0.5"/>
+  <!-- bottom-left: gold -->
+  <circle cx="392" cy="632" r="185" fill="#ffce5a" opacity="0.16"/>
+  <circle cx="392" cy="632" r="120" fill="#ffce5a"/>
+  <circle cx="360" cy="600" r="34" fill="#ffffff" opacity="0.5"/>
+  <!-- bottom-right: mint -->
+  <circle cx="632" cy="632" r="185" fill="#5affa9" opacity="0.16"/>
+  <circle cx="632" cy="632" r="120" fill="#5affa9"/>
+  <circle cx="600" cy="600" r="34" fill="#ffffff" opacity="0.5"/>
+</svg>
