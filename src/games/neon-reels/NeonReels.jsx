@@ -2,24 +2,13 @@ import { useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
 import RulesModal from "../../components/RulesModal.jsx";
 import Meter from "../../components/Meter.jsx";
-import { playTone } from "../../utils/audio.js";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
+import { useBet, useSound, useCoins, useSpinEasing, money, sleep, playTone } from "../../gdk";
 import ReelSymbol from "./ReelSymbol.jsx";
 import { scoreReels } from "./scoring.js";
 import { symbolById, weightedSymbol } from "./symbols.js";
-import { useSpinEasing } from "../../hooks/useSpinEasing.js";
-import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BET = 25;
 const MIN_BET = 5;
-const MAX_BET = 100;
 const STRIP_LENGTH = 6;
-
-function clampBet(nextBet, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, nextBet));
-}
 
 // A strip of random symbols used purely for the spinning animation.
 function makeStrip() {
@@ -28,7 +17,10 @@ function makeStrip() {
 
 export default function NeonReels() {
   const { balance, setBalance } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  const { bet, setBet, increase, decrease, reclamp, atMin, atMax, canBet, min, max } = useBet({
+    initial: 25, min: MIN_BET, max: 100, step: 5, onChange: () => sfx.bet(),
+  });
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState("Ready");
   const [reels, setReels] = useState(() => [weightedSymbol(), weightedSymbol(), weightedSymbol()]);
@@ -36,17 +28,12 @@ export default function NeonReels() {
   const [strips, setStrips] = useState(() => [makeStrip(), makeStrip(), makeStrip()]);
   const [spinning, setSpinning] = useState(false);
   const [winning, setWinning] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
   // Dev controls: seconds per revolution, and how long the first reel rolls (ms).
   const [rollDuration, setRollDuration] = useState(0.34);
   const [spinTime, setSpinTime] = useState(700);
 
   // Inject sine-eased spin keyframes
   useSpinEasing();
-
-  const updateBet = (nextBet, nextBalance = balance) => {
-    setBet(clampBet(nextBet, nextBalance));
-  };
 
   const spin = async (forcedIds) => {
     if (spinning || balance < bet) return;
@@ -95,7 +82,7 @@ export default function NeonReels() {
     }
 
     setSpinning(false);
-    updateBet(Math.min(bet, Math.max(MIN_BET, nextBalance)), nextBalance);
+    reclamp(nextBalance);
   };
 
   return (
@@ -111,7 +98,7 @@ export default function NeonReels() {
             <button
               className={`icon-button ${soundOn ? "" : "is-muted"}`}
               type="button"
-              onClick={() => setSoundOn(!soundOn)}
+              onClick={toggle}
               aria-label="Toggle sound"
               title="Toggle sound"
             >
@@ -169,10 +156,10 @@ export default function NeonReels() {
         </section>
 
         <section className="controls" aria-label="Slot controls">
-          <button className="stepper" type="button" onClick={() => updateBet(bet - 5)} disabled={spinning || bet <= MIN_BET}>-</button>
-          <input type="range" min={MIN_BET} max={MAX_BET} step="5" value={bet} onChange={(event) => updateBet(Number(event.target.value))} aria-label="Bet amount" />
-          <button className="stepper" type="button" onClick={() => updateBet(bet + 5)} disabled={spinning || bet >= MAX_BET || bet >= balance}>+</button>
-          <button className="spin-button" type="button" onClick={() => spin()} disabled={spinning || balance < bet}>Spin</button>
+          <button className="stepper" type="button" onClick={decrease} disabled={spinning || atMin}>-</button>
+          <input type="range" min={min} max={max} step="5" value={bet} onChange={(event) => setBet(Number(event.target.value))} aria-label="Bet amount" />
+          <button className="stepper" type="button" onClick={increase} disabled={spinning || atMax}>+</button>
+          <button className="spin-button" type="button" onClick={() => spin()} disabled={spinning || !canBet}>Spin</button>
         </section>
 
         <section className="paytable" aria-label="Paytable">

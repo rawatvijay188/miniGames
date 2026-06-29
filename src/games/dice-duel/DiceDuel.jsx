@@ -1,108 +1,98 @@
 import { useState } from "react";
-import GameNav from "../../components/GameNav.jsx";
-import RulesModal from "../../components/RulesModal.jsx";
-import { money } from "../../utils/format.js";
+import { useGame, GameShell, ScoreStrip, BetControls, money, sleep } from "../../gdk";
 import DiceSide from "./DiceSide.jsx";
 import { rollDie } from "./diceConfig.js";
-import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BET = 20;
-const MIN_BET = 10;
-const MAX_BET = 100;
 const ROLL_DURATION_MS = 900;
 
-function clampBet(nextBet, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, nextBet));
-}
-
 export default function DiceDuel() {
-  const { balance, setBalance } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
-  const [result, setResult] = useState("Ready");
-  const [rolling, setRolling] = useState(false);
+  const game = useGame({
+    bet: { initial: 20, min: 10, max: 100, step: 10 },
+    idleMessage: "Ready",
+  });
+  const { bet, balance, busy, message: result, soundOn, toggle, sfx } = game;
   const [player, setPlayer] = useState([1, 1]);
   const [dealer, setDealer] = useState([1, 1]);
+  const [rolling, setRolling] = useState(false);
 
-  const updateBet = (nextBet, nextBalance = balance) => {
-    setBet(clampBet(nextBet, nextBalance));
-  };
+  const roll = () =>
+    game.run(async () => {
+      game.stake();
+      setRolling(true);
+      game.setMessage("Rolling");
+      sfx.start();
 
-  const roll = () => {
-    if (rolling || balance < bet) return;
-
-    setRolling(true);
-    setResult("Rolling");
-
-    const nextPlayer = [rollDie(), rollDie()];
-    const nextDealer = [rollDie(), rollDie()];
-
-    setTimeout(() => {
-      const playerTotal = nextPlayer[0] + nextPlayer[1];
-      const dealerTotal = nextDealer[0] + nextDealer[1];
-      let nextBalance = balance - bet;
+      const nextPlayer = [rollDie(), rollDie()];
+      const nextDealer = [rollDie(), rollDie()];
+      await sleep(ROLL_DURATION_MS);
 
       setPlayer(nextPlayer);
       setDealer(nextDealer);
-
-      if (playerTotal > dealerTotal) {
-        nextBalance += bet * 2;
-        setResult(`Won ${money(bet)}`);
-      } else if (playerTotal === dealerTotal) {
-        nextBalance += bet;
-        setResult("Push");
-      } else {
-        setResult(`Lost ${money(bet)}`);
-      }
-
-      setBalance(nextBalance);
       setRolling(false);
-      updateBet(Math.min(bet, Math.max(MIN_BET, nextBalance)), nextBalance);
-    }, ROLL_DURATION_MS);
-  };
+
+      const playerTotal = nextPlayer[0] + nextPlayer[1];
+      const dealerTotal = nextDealer[0] + nextDealer[1];
+      const multiplier = playerTotal > dealerTotal ? 2 : playerTotal === dealerTotal ? 1 : 0;
+
+      game.settleBet({
+        multiplier,
+        winMessage: () => `Won ${money(bet)}`,
+        loseMessage: () => `Lost ${money(bet)}`,
+      });
+      if (multiplier === 1) game.setMessage("Push");
+    });
 
   return (
-    <main className="shell">
-      <section className="mini-game" aria-label="Dice Duel game">
-        <GameNav />
-        <header className="mini-header bj-header">
-          <div>
-            <p className="kicker">Quick chance</p>
-            <h1>Dice Duel</h1>
-          </div>
-          <div className="bj-header-actions">
-            <RulesModal title="Dice Duel">
-              <p><strong>Goal:</strong> Roll a higher total than the dealer to win.</p>
-              <ul>
-                <li>Set your bet and press <strong>Roll</strong>. You and the dealer each roll two dice.</li>
-                <li>The <strong>higher combined total wins</strong>.</li>
-                <li>Win and you're paid <strong>1:1</strong> (double your bet).</li>
-                <li>A <strong>tie</strong> is a push — your bet is returned.</li>
-                <li>Roll lower and you lose the bet.</li>
-              </ul>
-            </RulesModal>
-          </div>
-        </header>
+    <GameShell
+      label="Dice Duel game"
+      kicker="Quick chance"
+      title="Dice Duel"
+      soundOn={soundOn}
+      onToggleSound={toggle}
+      rules={
+        <>
+          <p><strong>Goal:</strong> Roll a higher total than the dealer to win.</p>
+          <ul>
+            <li>Set your bet and press <strong>Roll</strong>. You and the dealer each roll two dice.</li>
+            <li>The <strong>higher combined total wins</strong>.</li>
+            <li>Win and you're paid <strong>1:1</strong> (double your bet).</li>
+            <li>A <strong>tie</strong> is a push — your bet is returned.</li>
+            <li>Roll lower and you lose the bet.</li>
+          </ul>
+        </>
+      }
+    >
+      <ScoreStrip
+        label="Score"
+        items={[
+          { label: "Balance", value: money(balance) },
+          { label: "Bet", value: money(bet) },
+          { label: "Result", value: result },
+        ]}
+      />
 
-        <section className="score-strip" aria-label="Score">
-          <div><span>Balance</span><strong>{money(balance)}</strong></div>
-          <div><span>Bet</span><strong>{money(bet)}</strong></div>
-          <div><span>Result</span><strong>{result}</strong></div>
-        </section>
-
-        <section className="duel-table" aria-live="polite">
-          <DiceSide label="You" values={player} rolling={rolling} />
-          <div className="versus">VS</div>
-          <DiceSide label="Dealer" values={dealer} rolling={rolling} />
-        </section>
-
-        <section className="mini-controls" aria-label="Dice controls">
-          <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={rolling || bet <= MIN_BET}>-</button>
-          <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(event) => updateBet(Number(event.target.value))} aria-label="Bet amount" />
-          <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={rolling || bet >= MAX_BET || bet >= balance}>+</button>
-          <button className="spin-button" type="button" onClick={roll} disabled={rolling || balance < bet}>Roll</button>
-        </section>
+      <section className="duel-table" aria-live="polite">
+        <DiceSide label="You" values={player} rolling={rolling} />
+        <div className="versus">VS</div>
+        <DiceSide label="Dealer" values={dealer} rolling={rolling} />
       </section>
-    </main>
+
+      <BetControls
+        label="Dice controls"
+        bet={bet}
+        min={game.min}
+        max={game.max}
+        step={game.step}
+        onDecrease={game.decrease}
+        onIncrease={game.increase}
+        onChange={game.setBet}
+        atMin={game.atMin}
+        atMax={game.atMax}
+        canBet={game.canBet}
+        busy={busy}
+        actionLabel="Roll"
+        onAction={roll}
+      />
+    </GameShell>
   );
 }

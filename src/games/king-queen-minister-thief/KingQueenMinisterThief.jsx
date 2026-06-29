@@ -3,13 +3,8 @@ import * as PIXI from "pixi.js";
 import GameNav from "../../components/GameNav.jsx";
 import RulesModal from "../../components/RulesModal.jsx";
 import Meter from "../../components/Meter.jsx";
-import { playTone } from "../../utils/audio.js";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
-import { cellDuration, CELL_SLOW_MS, CELL_FAST_MS } from "../../utils/reelEasing.js";
-import { useCoins } from "../../context/CoinContext.jsx";
+import { useBet, useSound, useCoins, cellDuration, CELL_SLOW_MS, CELL_FAST_MS, money, sleep, playTone } from "../../gdk";
 
-const INITIAL_BET = 30;
 const MIN_BET = 10;
 const MAX_BET = 120;
 const CARD_WIDTH = 120;
@@ -254,12 +249,14 @@ export default function KingQueenMinisterThief() {
   const appRef = useRef(null);
   const reelRefs = useRef([]);
   const { balance, setBalance } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  const { bet, setBet, increase, decrease, reclamp, atMin, atMax, canBet, min, max } = useBet({
+    initial: 30, min: MIN_BET, max: MAX_BET, step: 10, onChange: () => sfx.bet(),
+  });
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState("Ready to spin");
   const [spinning, setSpinning] = useState(false);
   const [winning, setWinning] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
 
   useEffect(() => {
     if (!canvasRef.current) return undefined;
@@ -320,15 +317,6 @@ export default function KingQueenMinisterThief() {
     };
   }, []);
 
-  function clampBet(nextBet, currentBalance = balance) {
-    const max = Math.min(MAX_BET, Math.max(MIN_BET, currentBalance));
-    return Math.min(max, Math.max(MIN_BET, nextBet));
-  }
-
-  const updateBet = (nextBet, availableBalance = balance) => {
-    setBet(clampBet(nextBet, availableBalance));
-  };
-
   async function spinRound(forcedIds) {
     if (spinning || balance < bet) return;
     if (!appRef.current || reelRefs.current.length < REEL_COUNT) return; // reels not ready yet
@@ -369,7 +357,7 @@ export default function KingQueenMinisterThief() {
     }
 
     setSpinning(false);
-    updateBet(bet, nextBalance);
+    reclamp(nextBalance);
   }
 
   return (
@@ -386,7 +374,7 @@ export default function KingQueenMinisterThief() {
             <button
               className={`icon-button ${soundOn ? "" : "is-muted"}`}
               type="button"
-              onClick={() => setSoundOn(!soundOn)}
+              onClick={toggle}
               aria-label="Toggle sound"
               title="Toggle sound"
             >
@@ -420,22 +408,22 @@ export default function KingQueenMinisterThief() {
         </section>
 
         <section className="controls" aria-label="Slot controls">
-          <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={spinning || bet <= MIN_BET}>
+          <button className="stepper" type="button" onClick={decrease} disabled={spinning || atMin}>
             -
           </button>
           <input
             type="range"
-            min={MIN_BET}
-            max={MAX_BET}
+            min={min}
+            max={max}
             step="10"
             value={bet}
-            onChange={(event) => updateBet(Number(event.target.value))}
+            onChange={(event) => setBet(Number(event.target.value))}
             aria-label="Bet amount"
           />
-          <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={spinning || bet >= MAX_BET || bet >= balance}>
+          <button className="stepper" type="button" onClick={increase} disabled={spinning || atMax}>
             +
           </button>
-          <button className="spin-button" type="button" onClick={() => spinRound()} disabled={spinning || balance < bet}>
+          <button className="spin-button" type="button" onClick={() => spinRound()} disabled={spinning || !canBet}>
             Spin
           </button>
         </section>

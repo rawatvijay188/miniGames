@@ -1,13 +1,7 @@
 import { useState } from "react";
 import GameNav from "../../components/GameNav.jsx";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
-import { playTone } from "../../utils/audio.js";
 import RulesModal from "../../components/RulesModal.jsx";
-import SpinningReels, { toVisualColumns } from "../../components/SpinningReels.jsx";
-import { useSpinEasing } from "../../hooks/useSpinEasing.js";
-import { defaultSpinSteps } from "../../utils/reelEasing.js";
-import { buildReelStrips, stopReelsSequentially } from "../../utils/reelSpin.js";
+import { useBet, useSound, useCoins, useReelSpin, SpinningReels, money, sleep, playTone } from "../../gdk";
 import {
   COLS,
   ROWS,
@@ -17,46 +11,39 @@ import {
   collapse,
   cascadePayout
 } from "./cascadeLogic.js";
-import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BET = 20;
-const MIN_BET = 10;
-const MAX_BET = 100;
 const STEP_MS = 480;
 const STRIP_LEN = 12; // random symbols per reel during the scroll
-const FIRST_STOP_MS = 520; // when the first reel stops
-const STOP_GAP_MS = 210; // extra delay before each later reel stops
-const REVEAL_MS = 240; // settle pause before the result grid is shown
-
-function clampBet(nextBet, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, nextBet));
-}
 
 export default function CosmicCascade() {
   const [grid, setGrid] = useState(randomGrid);
   const { balance, setBalance } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  const { bet, setBet, increase, decrease, reclamp, atMin, atMax, canBet, min, max } = useBet({
+    initial: 20, min: 10, max: 100, step: 10, onChange: () => sfx.bet(),
+  });
   const [lastWin, setLastWin] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
   const [winningIds, setWinningIds] = useState([]);
   const [message, setMessage] = useState("Spin to start the cascade.");
   const [busy, setBusy] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
-  // While set, the reels are scrolling: { columns, strips }. rolling[col] is
-  // true until that reel stops.
-  const [reelSpin, setReelSpin] = useState(null);
-  const [rolling, setRolling] = useState([]);
-  const [spinSteps, setSpinSteps] = useState([]);
 
-  // Inject sine-eased spin keyframes
-  useSpinEasing();
-
-  const updateBet = (next) => {
-    if (busy) return;
-    playTone(soundOn, 320, 0.05);
-    setBet(clampBet(next, balance));
-  };
+  // Standard reel spin. The grid is stored as columns of rows (grid[col][row]);
+  // flatten row-major so the stopped reels line up with the revealed grid.
+  const reels = useReelSpin({
+    cols: COLS,
+    rows: ROWS,
+    randomGrid,
+    stripLen: STRIP_LEN,
+    flatten: (g) => {
+      const flat = [];
+      for (let r = 0; r < ROWS; r += 1) {
+        for (let c = 0; c < COLS; c += 1) flat.push(g[c][r]);
+      }
+      return flat;
+    },
+    onStop: (c) => playTone(soundOn, 300 + c * 60, 0.05),
+  });
 
   const spin = async () => {
     if (busy || balance < bet) return;
@@ -68,31 +55,9 @@ export default function CosmicCascade() {
     setMessage("Spinning...");
     playTone(soundOn, 240, 0.08);
 
-    // Decide the result up front, then scroll the reels to land on it. The
-    // game grid is stored as columns of rows (`grid[col][row]`), but
-    // `toVisualColumns` expects a row-major flat list, so build the flat array
-    // row by row.
+    // Decide the result up front, then scroll the reels to land on it.
     let working = randomGrid();
-    const flat = [];
-    for (let r = 0; r < ROWS; r += 1) {
-      for (let c = 0; c < COLS; c += 1) flat.push(working[c][r]);
-    }
-    setReelSpin({ columns: toVisualColumns(flat, COLS), strips: buildReelStrips(COLS, STRIP_LEN, randomGrid) });
-    setSpinSteps(defaultSpinSteps(COLS));
-
-    await stopReelsSequentially({
-      reelCount: COLS,
-      firstStopMs: FIRST_STOP_MS,
-      stopGapMs: STOP_GAP_MS,
-      setRolling,
-      onStop: (c) => playTone(soundOn, 300 + c * 60, 0.05)
-    });
-
-    await sleep(REVEAL_MS);
-    setGrid(working);
-    setReelSpin(null);
-    setRolling([]);
-    setSpinSteps([]);
+    await reels.spin(working, () => setGrid(working));
 
     const betUnit = bet / 10;
     let totalWin = 0;
@@ -129,7 +94,7 @@ export default function CosmicCascade() {
     }
 
     setMultiplier(1);
-    setBet((b) => clampBet(b, balance - bet + totalWin));
+    reclamp(balance - bet + totalWin);
     setBusy(false);
   };
 
@@ -148,7 +113,7 @@ export default function CosmicCascade() {
             <button
               className={`icon-button ${soundOn ? "" : "is-muted"}`}
               type="button"
-              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
+              onClick={toggle}
               aria-label="Toggle sound"
               title="Toggle sound"
             >
@@ -174,8 +139,8 @@ export default function CosmicCascade() {
         </section>
 
         <section className="cascade-grid" aria-live="polite" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, "--reel-roll-duration": "0.34s" }}>
-          {reelSpin ? (
-            <SpinningReels columns={reelSpin.columns} strips={reelSpin.strips} rolling={rolling} rows={ROWS} spinSteps={spinSteps} durationScale={0.34} />
+          {reels.reelSpin ? (
+            <SpinningReels columns={reels.reelSpin.columns} strips={reels.reelSpin.strips} rolling={reels.rolling} rows={ROWS} spinSteps={reels.spinSteps} durationScale={reels.durationScale} />
           ) : (
             grid.map((col, c) =>
               col.map((symbol, r) => (
@@ -195,11 +160,11 @@ export default function CosmicCascade() {
         </div>
 
         <section className="controls" aria-label="Slot controls">
-          <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={busy || bet <= MIN_BET}>-</button>
-          <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(e) => updateBet(Number(e.target.value))} aria-label="Bet amount" disabled={busy} />
-          <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={busy || bet >= MAX_BET || bet >= balance}>+</button>
-          <button className="spin-button" type="button" onClick={spin} disabled={busy || balance < bet}>
-            {balance < bet ? "No funds" : "Spin"}
+          <button className="stepper" type="button" onClick={decrease} disabled={busy || atMin}>-</button>
+          <input type="range" min={min} max={max} step="10" value={bet} onChange={(e) => setBet(Number(e.target.value))} aria-label="Bet amount" disabled={busy} />
+          <button className="stepper" type="button" onClick={increase} disabled={busy || atMax}>+</button>
+          <button className="spin-button" type="button" onClick={spin} disabled={busy || !canBet}>
+            {canBet ? "Spin" : "No funds"}
           </button>
         </section>
 

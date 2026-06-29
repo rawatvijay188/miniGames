@@ -1,8 +1,5 @@
 import { useState } from "react";
-import GameNav from "../../components/GameNav.jsx";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
-import { playTone } from "../../utils/audio.js";
+import { useSound, useCoins, GameShell, ScoreStrip, Paytable, clampBet, money, sleep, playTone } from "../../gdk";
 import {
   buildDeck,
   shuffle,
@@ -11,18 +8,13 @@ import {
   DEALER_STANDS_ON,
   BLACKJACK
 } from "./deck.js";
-import { useCoins } from "../../context/CoinContext.jsx";
 
-const INITIAL_BET = 20;
 const MIN_BET = 10;
 const MAX_BET = 100;
+const BET_RANGE = { min: MIN_BET, max: MAX_BET };
 const DEAL_DELAY_MS = 320;
 
 // Phases: "betting" -> "player" -> "dealer" -> "done"
-function clampBet(nextBet, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, nextBet));
-}
 
 function Card({ card, hidden }) {
   if (hidden) {
@@ -55,34 +47,30 @@ function Hand({ label, cards, total, hideHole, flash }) {
 
 export default function Blackjack() {
   const { balance, setBalance, refillWallet } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  // Blackjack keeps its own bet state (not useBet) because Double Down sets the
+  // bet to 2× — which can exceed the normal max — for the rest of the round.
+  const [bet, setBet] = useState(20);
   const [deck, setDeck] = useState([]);
   const [player, setPlayer] = useState([]);
   const [dealer, setDealer] = useState([]);
   const [phase, setPhase] = useState("betting");
   const [message, setMessage] = useState("Place your bet and deal.");
   const [busy, setBusy] = useState(false);
-  const [showRules, setShowRules] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
   const [result, setResult] = useState(null); // "win" | "lose" | "push" — drives card flash
 
   const playerTotal = handValue(player);
   const dealerTotal = handValue(dealer);
   const canDouble = phase === "player" && player.length === 2 && balance >= bet;
 
-  const playClick = () => playTone(soundOn, 320, 0.05);
-  const playDeal = () => playTone(soundOn, 460, 0.06);
-  const playWin = () => {
-    playTone(soundOn, 523, 0.12);
-    setTimeout(() => playTone(soundOn, 784, 0.16), 120);
-  };
-  const playLose = () => playTone(soundOn, 150, 0.26);
+  const playWin = () => sfx.jackpot();
+  const playLose = () => sfx.lose();
   const playPush = () => playTone(soundOn, 330, 0.12);
 
   const updateBet = (nextBet) => {
     if (phase !== "betting") return;
-    playClick();
-    setBet(clampBet(nextBet, balance));
+    sfx.click();
+    setBet(clampBet(nextBet, balance, BET_RANGE));
   };
 
   // Draws a card from the working deck, reshuffling a fresh one if needed.
@@ -97,7 +85,7 @@ export default function Blackjack() {
 
   const deal = () => {
     if (busy || balance < bet) return;
-    playDeal();
+    playTone(soundOn, 460, 0.06);
     setResult(null);
 
     let working = shuffle(buildDeck());
@@ -152,7 +140,7 @@ export default function Blackjack() {
 
   const hit = () => {
     if (phase !== "player" || busy) return;
-    playDeal();
+    playTone(soundOn, 460, 0.06);
     const [card, rest] = drawFrom(deck);
     const nextPlayer = [...player, card];
     setDeck(rest);
@@ -171,7 +159,7 @@ export default function Blackjack() {
 
   const doubleDown = async () => {
     if (!canDouble || busy) return;
-    playDeal();
+    playTone(soundOn, 460, 0.06);
     setBalance((b) => b - bet);
     const doubled = bet * 2;
     setBet(doubled);
@@ -194,7 +182,7 @@ export default function Blackjack() {
 
   const stand = (playerCards = player) => {
     if (phase !== "player" || busy) return;
-    playClick();
+    sfx.click();
     dealerPlay(playerCards, deck, bet);
   };
 
@@ -214,7 +202,7 @@ export default function Blackjack() {
       dealerCards = [...dealerCards, card];
       setDealer(dealerCards);
       setDeck(working);
-      playDeal();
+      playTone(soundOn, 460, 0.06);
       await sleep(DEAL_DELAY_MS);
     }
 
@@ -250,146 +238,113 @@ export default function Blackjack() {
   };
 
   const nextRound = () => {
-    playClick();
+    sfx.click();
     setResult(null);
     setPhase("betting");
     setPlayer([]);
     setDealer([]);
-    setBet((b) => clampBet(b, balance));
+    setBet((b) => clampBet(b, balance, BET_RANGE));
     setMessage(balance < MIN_BET ? "Out of chips. Refill to keep playing." : "Place your bet and deal.");
   };
 
   const refill = () => {
-    playClick();
+    sfx.click();
     setResult(null);
     refillWallet();
-    setBet(INITIAL_BET);
+    setBet(20);
     setPhase("betting");
     setPlayer([]);
     setDealer([]);
     setMessage("Chips refilled. Place your bet and deal.");
   };
 
-  const toggleSound = () => {
-    // Play the click first so unmuting still gives audible feedback.
-    playTone(true, 320, 0.05);
-    setSoundOn((on) => !on);
-  };
-
-  const openRules = () => {
-    playClick();
-    setShowRules(true);
-  };
-
   const hideHole = phase === "player" || phase === "betting";
 
   return (
-    <main className="shell">
-      <section className="mini-game" aria-label="Blackjack game">
-        <GameNav />
-        <header className="mini-header bj-header">
-          <div>
-            <p className="kicker">Card table</p>
-            <h1>Blackjack</h1>
-          </div>
-          <div className="bj-header-actions">
-            <button
-              className={`icon-button ${soundOn ? "" : "is-muted"}`}
-              type="button"
-              onClick={toggleSound}
-              aria-label={soundOn ? "Mute sound" : "Unmute sound"}
-              title={soundOn ? "Mute sound" : "Unmute sound"}
-            >
-              {soundOn ? "♪" : "♪̸"}
-            </button>
-            <button className="rules-button" type="button" onClick={openRules}>
-              Rules
-            </button>
-          </div>
-        </header>
+    <GameShell
+      label="Blackjack game"
+      kicker="Card table"
+      title="Blackjack"
+      soundOn={soundOn}
+      onToggleSound={toggle}
+      rules={
+        <>
+          <p><strong>Goal:</strong> Beat the dealer by getting a hand total closer to 21 — without going over.</p>
+          <ul>
+            <li>Place your bet, then press <strong>Deal</strong>. You and the dealer each get two cards; the dealer keeps one card face down.</li>
+            <li>Number cards are worth their value, face cards (J, Q, K) are worth 10, and an <strong>Ace</strong> counts as <strong>1 or 11</strong> — whichever helps you most. (Example: Ace + 9 + 5 → the Ace becomes 1 so you total 15 instead of busting at 25.)</li>
+            <li><strong>Hit</strong> to take another card. <strong>Stand</strong> to keep your hand and end your turn.</li>
+            <li><strong>Double Down</strong> doubles your bet and gives you exactly one more card (available on your first two cards only).</li>
+            <li>Go over 21 and you <strong>bust</strong> — you lose immediately.</li>
+            <li>When you stand, the dealer reveals the hidden card and must keep drawing until reaching <strong>17</strong> or higher, then stops.</li>
+          </ul>
+          <p><strong>Payouts:</strong></p>
+          <ul>
+            <li>A natural <strong>Blackjack</strong> (Ace + a 10-value card on your first two cards) pays <strong>3:2</strong> — bet $20 and you win $30.</li>
+            <li>Any other win pays <strong>1:1</strong> — bet $20 and you win $20 (you get $40 back).</li>
+            <li>A tie is a <strong>push</strong> — your bet is returned, nobody wins.</li>
+            <li>Lose or bust and you forfeit your bet.</li>
+          </ul>
+        </>
+      }
+    >
+      <ScoreStrip
+        label="Score"
+        items={[
+          { label: "Balance", value: money(balance) },
+          { label: "Bet", value: money(bet) },
+          { label: "Result", value: phase === "done" ? "Round over" : phase === "betting" ? "Ready" : "In play" },
+        ]}
+      />
 
-        <section className="score-strip" aria-label="Score">
-          <div><span>Balance</span><strong>{money(balance)}</strong></div>
-          <div><span>Bet</span><strong>{money(bet)}</strong></div>
-          <div><span>Result</span><strong>{phase === "done" ? "Round over" : phase === "betting" ? "Ready" : "In play"}</strong></div>
-        </section>
-
-        <section className="card-table" aria-live="polite">
-          <Hand label="Dealer" cards={dealer} total={dealerTotal} hideHole={hideHole} flash={null} />
-          <div className="bj-message" role="status">{message}</div>
-          <Hand label="You" cards={player} total={playerTotal} hideHole={false} flash={result} />
-        </section>
-
-        {phase === "betting" && (
-          <section className="mini-controls" aria-label="Bet controls">
-            <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={bet <= MIN_BET}>-</button>
-            <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(e) => updateBet(Number(e.target.value))} aria-label="Bet amount" />
-            <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={bet >= MAX_BET || bet >= balance}>+</button>
-            <button className="spin-button" type="button" onClick={deal} disabled={balance < bet || balance < MIN_BET}>Deal</button>
-          </section>
-        )}
-
-        {phase === "player" && (
-          <section className="bj-actions" aria-label="Player actions">
-            <button className="spin-button" type="button" onClick={hit} disabled={busy}>Hit</button>
-            <button className="spin-button" type="button" onClick={() => stand()} disabled={busy}>Stand</button>
-            <button className="stepper bj-double" type="button" onClick={doubleDown} disabled={!canDouble || busy}>Double</button>
-          </section>
-        )}
-
-        {(phase === "dealer") && (
-          <section className="bj-actions" aria-label="Dealer turn">
-            <button className="spin-button" type="button" disabled>Dealer playing...</button>
-          </section>
-        )}
-
-        {phase === "done" && (
-          <section className="bj-actions" aria-label="Next round">
-            {balance < MIN_BET ? (
-              <button className="spin-button" type="button" onClick={refill}>Refill chips</button>
-            ) : (
-              <button className="spin-button" type="button" onClick={nextRound}>Next hand</button>
-            )}
-          </section>
-        )}
-
-        <section className="paytable" aria-label="Payouts">
-          <div><span>Blackjack pays</span><strong>3:2</strong></div>
-          <div><span>Win pays</span><strong>1:1</strong></div>
-          <div><span>Dealer stands</span><strong>17</strong></div>
-          <div><span>Ace</span><strong>1 / 11</strong></div>
-        </section>
+      <section className="card-table" aria-live="polite">
+        <Hand label="Dealer" cards={dealer} total={dealerTotal} hideHole={hideHole} flash={null} />
+        <div className="bj-message" role="status">{message}</div>
+        <Hand label="You" cards={player} total={playerTotal} hideHole={false} flash={result} />
       </section>
 
-      {showRules && (
-        <div className="rules-overlay" role="dialog" aria-modal="true" aria-label="Blackjack rules" onClick={() => setShowRules(false)}>
-          <div className="rules-modal" onClick={(e) => e.stopPropagation()}>
-            <header className="rules-modal-head">
-              <h2>How to play Blackjack</h2>
-              <button className="icon-button" type="button" onClick={() => setShowRules(false)} aria-label="Close rules">×</button>
-            </header>
-            <div className="rules-body">
-              <p><strong>Goal:</strong> Beat the dealer by getting a hand total closer to 21 — without going over.</p>
-              <ul>
-                <li>Place your bet, then press <strong>Deal</strong>. You and the dealer each get two cards; the dealer keeps one card face down.</li>
-                <li>Number cards are worth their value, face cards (J, Q, K) are worth 10, and an <strong>Ace</strong> counts as <strong>1 or 11</strong> — whichever helps you most. (Example: Ace + 9 + 5 → the Ace becomes 1 so you total 15 instead of busting at 25.)</li>
-                <li><strong>Hit</strong> to take another card. <strong>Stand</strong> to keep your hand and end your turn.</li>
-                <li><strong>Double Down</strong> doubles your bet and gives you exactly one more card (available on your first two cards only).</li>
-                <li>Go over 21 and you <strong>bust</strong> — you lose immediately.</li>
-                <li>When you stand, the dealer reveals the hidden card and must keep drawing until reaching <strong>17</strong> or higher, then stops.</li>
-              </ul>
-              <p><strong>Payouts:</strong></p>
-              <ul>
-                <li>A natural <strong>Blackjack</strong> (Ace + a 10-value card on your first two cards) pays <strong>3:2</strong> — bet $20 and you win $30.</li>
-                <li>Any other win pays <strong>1:1</strong> — bet $20 and you win $20 (you get $40 back).</li>
-                <li>A tie is a <strong>push</strong> — your bet is returned, nobody wins.</li>
-                <li>Lose or bust and you forfeit your bet.</li>
-              </ul>
-            </div>
-            <button className="spin-button" type="button" onClick={() => setShowRules(false)}>Got it</button>
-          </div>
-        </div>
+      {phase === "betting" && (
+        <section className="mini-controls" aria-label="Bet controls">
+          <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={bet <= MIN_BET}>-</button>
+          <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(e) => updateBet(Number(e.target.value))} aria-label="Bet amount" />
+          <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={bet >= MAX_BET || bet >= balance}>+</button>
+          <button className="spin-button" type="button" onClick={deal} disabled={balance < bet || balance < MIN_BET}>Deal</button>
+        </section>
       )}
-    </main>
+
+      {phase === "player" && (
+        <section className="bj-actions" aria-label="Player actions">
+          <button className="spin-button" type="button" onClick={hit} disabled={busy}>Hit</button>
+          <button className="spin-button" type="button" onClick={() => stand()} disabled={busy}>Stand</button>
+          <button className="stepper bj-double" type="button" onClick={doubleDown} disabled={!canDouble || busy}>Double</button>
+        </section>
+      )}
+
+      {(phase === "dealer") && (
+        <section className="bj-actions" aria-label="Dealer turn">
+          <button className="spin-button" type="button" disabled>Dealer playing...</button>
+        </section>
+      )}
+
+      {phase === "done" && (
+        <section className="bj-actions" aria-label="Next round">
+          {balance < MIN_BET ? (
+            <button className="spin-button" type="button" onClick={refill}>Refill chips</button>
+          ) : (
+            <button className="spin-button" type="button" onClick={nextRound}>Next hand</button>
+          )}
+        </section>
+      )}
+
+      <Paytable
+        label="Payouts"
+        rows={[
+          { label: "Blackjack pays", value: "3:2" },
+          { label: "Win pays", value: "1:1" },
+          { label: "Dealer stands", value: "17" },
+          { label: "Ace", value: "1 / 11" },
+        ]}
+      />
+    </GameShell>
   );
 }

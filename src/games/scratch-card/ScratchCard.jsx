@@ -1,20 +1,6 @@
 import { useState } from "react";
-import GameNav from "../../components/GameNav.jsx";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
-import { playTone } from "../../utils/audio.js";
-import RulesModal from "../../components/RulesModal.jsx";
+import { useBet, useSound, useCoins, GameShell, ScoreStrip, Paytable, money, sleep, playTone } from "../../gdk";
 import { generateCard, evaluateCard, SYMBOLS } from "./scratchLogic.js";
-import { useCoins } from "../../context/CoinContext.jsx";
-
-const INITIAL_BET = 20;
-const MIN_BET = 10;
-const MAX_BET = 100;
-
-function clampBet(next, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, next));
-}
 
 // Check which rows are fully revealed and winning — for progressive glow.
 function partialWinRows(cells, rev) {
@@ -30,7 +16,11 @@ function partialWinRows(cells, rev) {
 
 export default function ScratchCard() {
   const { balance, setBalance, refillWallet } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  const { bet, setBet, increase, decrease, atMin, atMax, min, max } = useBet({
+    initial: 20, min: 10, max: 100, step: 10, onChange: () => sfx.bet(),
+  });
+
   const [card, setCard] = useState(() => generateCard());
   const [revealed, setRevealed] = useState(new Set());
   const [winRows, setWinRows] = useState(new Set());
@@ -38,13 +28,6 @@ export default function ScratchCard() {
   const [phase, setPhase] = useState("buying"); // buying | scratching | done
   const [message, setMessage] = useState("Buy a card to scratch.");
   const [busy, setBusy] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
-
-  const updateBet = (next) => {
-    if (phase !== "buying") return;
-    playTone(soundOn, 320, 0.05);
-    setBet(clampBet(next, balance));
-  };
 
   const buy = () => {
     if (balance < bet) return;
@@ -58,7 +41,7 @@ export default function ScratchCard() {
     setMessage("Scratch the cells to reveal!");
   };
 
-  const settle = (cells, rev) => {
+  const settle = (cells) => {
     const { totalMult, winRows: wr } = evaluateCard(cells);
     setWinRows(wr);
     const payout = totalMult * bet;
@@ -66,11 +49,10 @@ export default function ScratchCard() {
       setBalance((b) => b + payout);
       setTotalWin(payout);
       setMessage(`You won ${money(payout)}!`);
-      playTone(soundOn, 760, 0.16);
-      setTimeout(() => playTone(soundOn, 880, 0.18), 120);
+      sfx.jackpot();
     } else {
       setMessage("No match. Try another card.");
-      playTone(soundOn, 180, 0.22);
+      sfx.lose();
     }
     setPhase("done");
   };
@@ -84,7 +66,7 @@ export default function ScratchCard() {
     setRevealed(nextRev);
 
     if (nextRev.size === 9) {
-      settle(card, nextRev);
+      settle(card);
     } else {
       setWinRows(partialWinRows(card, nextRev));
     }
@@ -106,124 +88,112 @@ export default function ScratchCard() {
     }
 
     setBusy(false);
-    settle(card, all);
+    settle(card);
   };
 
   const newCard = () => {
-    playTone(soundOn, 320, 0.05);
+    sfx.click();
     setPhase("buying");
     setTotalWin(0);
-    setBet((b) => clampBet(b, balance));
+    setBet(bet, balance);
     setMessage("Buy a card to scratch.");
   };
 
   const refill = () => {
-    playTone(soundOn, 320, 0.05);
+    sfx.click();
     refillWallet();
-    setBet(INITIAL_BET);
+    setBet(20);
     setPhase("buying");
     setTotalWin(0);
     setMessage("Chips refilled. Buy a card.");
   };
 
   return (
-    <main className="shell">
-      <section className="mini-game" aria-label="Scratch Card game">
-        <GameNav />
-        <header className="mini-header bj-header">
-          <div>
-            <p className="kicker">Instant win</p>
-            <h1>Scratch Card</h1>
-          </div>
-          <div className="bj-header-actions">
+    <GameShell
+      label="Scratch Card game"
+      kicker="Instant win"
+      title="Scratch Card"
+      soundOn={soundOn}
+      onToggleSound={toggle}
+      rules={
+        <>
+          <p><strong>Goal:</strong> Scratch the card to reveal symbols and match three in a row to win.</p>
+          <ul>
+            <li>Set your bet to buy a card, then <strong>scratch the panels</strong> to reveal what's underneath.</li>
+            <li>Match <strong>three of the same symbol in a row</strong> to win a prize.</li>
+            <li>Each symbol has its own payout — the <strong>diamond row pays 50×</strong> your bet.</li>
+            <li>No matching row means no win — buy another card and try again.</li>
+          </ul>
+        </>
+      }
+    >
+      <ScoreStrip
+        label="Score"
+        items={[
+          { label: "Balance", value: money(balance) },
+          { label: "Card cost", value: money(bet) },
+          { label: "Won", value: money(totalWin) },
+        ]}
+      />
+
+      <div className={`win-banner${totalWin > 0 ? " is-win" : ""}`} role="status">
+        {message}
+      </div>
+
+      <section className="scratch-grid" aria-label="Scratch card" aria-live="polite">
+        {card.map((sym, i) => {
+          const row = Math.floor(i / 3);
+          const isRevealed = revealed.has(i);
+          const isWin = isRevealed && winRows.has(row);
+          return (
             <button
-              className={`icon-button ${soundOn ? "" : "is-muted"}`}
+              key={i}
               type="button"
-              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-              aria-label="Toggle sound"
-              title="Toggle sound"
-            >♪</button>
-            <RulesModal title="Scratch Card">
-              <p><strong>Goal:</strong> Scratch the card to reveal symbols and match three in a row to win.</p>
-              <ul>
-                <li>Set your bet to buy a card, then <strong>scratch the panels</strong> to reveal what's underneath.</li>
-                <li>Match <strong>three of the same symbol in a row</strong> to win a prize.</li>
-                <li>Each symbol has its own payout — the <strong>diamond row pays 50×</strong> your bet.</li>
-                <li>No matching row means no win — buy another card and try again.</li>
-              </ul>
-            </RulesModal>
-          </div>
-        </header>
-
-        <section className="score-strip" aria-label="Score">
-          <div><span>Balance</span><strong>{money(balance)}</strong></div>
-          <div><span>Card cost</span><strong>{money(bet)}</strong></div>
-          <div><span>Won</span><strong>{money(totalWin)}</strong></div>
-        </section>
-
-        <div className={`win-banner${totalWin > 0 ? " is-win" : ""}`} role="status">
-          {message}
-        </div>
-
-        <section className="scratch-grid" aria-label="Scratch card" aria-live="polite">
-          {card.map((sym, i) => {
-            const row = Math.floor(i / 3);
-            const isRevealed = revealed.has(i);
-            const isWin = isRevealed && winRows.has(row);
-            return (
-              <button
-                key={i}
-                type="button"
-                className={[
-                  "scratch-cell",
-                  isRevealed ? "is-revealed" : "",
-                  isWin ? "is-win-row" : "",
-                ].filter(Boolean).join(" ")}
-                onClick={() => scratch(i)}
-                disabled={isRevealed || phase !== "scratching"}
-                aria-label={isRevealed ? `${sym.emoji}` : "Unscratched"}
-              >
-                {isRevealed ? sym.emoji : ""}
-              </button>
-            );
-          })}
-        </section>
-
-        {phase === "buying" && (
-          <section className="mini-controls">
-            <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={bet <= MIN_BET}>-</button>
-            <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(e) => updateBet(Number(e.target.value))} aria-label="Card cost" />
-            <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={bet >= MAX_BET || bet >= balance}>+</button>
-            <button className="spin-button" type="button" onClick={buy} disabled={balance < bet}>Buy Card</button>
-          </section>
-        )}
-
-        {phase === "scratching" && (
-          <section className="mini-controls">
-            <button className="spin-button" type="button" onClick={revealAll} disabled={busy} style={{ gridColumn: "1 / -1" }}>
-              Reveal All
+              className={[
+                "scratch-cell",
+                isRevealed ? "is-revealed" : "",
+                isWin ? "is-win-row" : "",
+              ].filter(Boolean).join(" ")}
+              onClick={() => scratch(i)}
+              disabled={isRevealed || phase !== "scratching"}
+              aria-label={isRevealed ? `${sym.emoji}` : "Unscratched"}
+            >
+              {isRevealed ? sym.emoji : ""}
             </button>
-          </section>
-        )}
-
-        {phase === "done" && (
-          <section className="mini-controls">
-            {balance < MIN_BET
-              ? <button className="spin-button" type="button" onClick={refill} style={{ gridColumn: "1 / -1" }}>Refill chips</button>
-              : <button className="spin-button" type="button" onClick={newCard} style={{ gridColumn: "1 / -1" }}>New card</button>
-            }
-          </section>
-        )}
-
-        <section className="paytable" aria-label="Payouts">
-          {SYMBOLS.map((s) => (
-            <div key={s.id}>
-              <span>{s.emoji} {s.emoji} {s.emoji}</span>
-              <strong>{s.mult}x</strong>
-            </div>
-          ))}
-        </section>
+          );
+        })}
       </section>
-    </main>
+
+      {phase === "buying" && (
+        <section className="mini-controls">
+          <button className="stepper" type="button" onClick={decrease} disabled={atMin}>-</button>
+          <input type="range" min={min} max={max} step="10" value={bet} onChange={(e) => setBet(Number(e.target.value))} aria-label="Card cost" />
+          <button className="stepper" type="button" onClick={increase} disabled={atMax}>+</button>
+          <button className="spin-button" type="button" onClick={buy} disabled={balance < bet}>Buy Card</button>
+        </section>
+      )}
+
+      {phase === "scratching" && (
+        <section className="mini-controls">
+          <button className="spin-button" type="button" onClick={revealAll} disabled={busy} style={{ gridColumn: "1 / -1" }}>
+            Reveal All
+          </button>
+        </section>
+      )}
+
+      {phase === "done" && (
+        <section className="mini-controls">
+          {balance < min
+            ? <button className="spin-button" type="button" onClick={refill} style={{ gridColumn: "1 / -1" }}>Refill chips</button>
+            : <button className="spin-button" type="button" onClick={newCard} style={{ gridColumn: "1 / -1" }}>New card</button>
+          }
+        </section>
+      )}
+
+      <Paytable
+        label="Payouts"
+        rows={SYMBOLS.map((s) => ({ label: `${s.emoji} ${s.emoji} ${s.emoji}`, value: `${s.mult}x` }))}
+      />
+    </GameShell>
   );
 }

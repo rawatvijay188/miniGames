@@ -1,20 +1,6 @@
 import { useState } from "react";
-import GameNav from "../../components/GameNav.jsx";
-import { money } from "../../utils/format.js";
-import { sleep } from "../../utils/timing.js";
-import { playTone } from "../../utils/audio.js";
-import RulesModal from "../../components/RulesModal.jsx";
+import { useBet, useSound, useCoins, GameShell, ScoreStrip, money, sleep, playTone } from "../../gdk";
 import { buildDeck, shuffle, evaluateHand, HAND_RANKS } from "./pokerLogic.js";
-import { useCoins } from "../../context/CoinContext.jsx";
-
-const INITIAL_BET = 20;
-const MIN_BET = 10;
-const MAX_BET = 100;
-
-function clampBet(next, balance) {
-  const max = Math.min(MAX_BET, Math.max(MIN_BET, balance));
-  return Math.min(max, Math.max(MIN_BET, next));
-}
 
 function CardSlot({ card, held, phase, onToggle }) {
   if (!card) {
@@ -46,7 +32,11 @@ function CardSlot({ card, held, phase, onToggle }) {
 
 export default function VideoPoker() {
   const { balance, setBalance, refillWallet } = useCoins();
-  const [bet, setBet] = useState(INITIAL_BET);
+  const { soundOn, toggle, sfx } = useSound();
+  const { bet, setBet, increase, decrease, atMin, atMax, min, max } = useBet({
+    initial: 20, min: 10, max: 100, step: 10, onChange: () => sfx.bet(),
+  });
+
   const [hand, setHand] = useState([null, null, null, null, null]);
   const [drawDeck, setDrawDeck] = useState([]);
   const [held, setHeld] = useState(new Set());
@@ -54,13 +44,6 @@ export default function VideoPoker() {
   const [handResult, setHandResult] = useState(null);
   const [message, setMessage] = useState("Bet and deal to start.");
   const [busy, setBusy] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
-
-  const updateBet = (next) => {
-    if (phase !== "betting") return;
-    playTone(soundOn, 320, 0.05);
-    setBet(clampBet(next, balance));
-  };
 
   const deal = async () => {
     if (busy || balance < bet) return;
@@ -124,29 +107,28 @@ export default function VideoPoker() {
       const won = bet * result.mult;
       setBalance((b) => b + won);
       setMessage(`${result.name}! Won ${money(won)}.`);
-      playTone(soundOn, 600, 0.12);
-      setTimeout(() => playTone(soundOn, 760, 0.16), 120);
+      sfx.jackpot();
     } else {
       setMessage("No win. Try again.");
-      playTone(soundOn, 160, 0.22);
+      sfx.lose();
     }
     setBusy(false);
   };
 
   const nextHand = () => {
-    playTone(soundOn, 320, 0.05);
+    sfx.click();
     setPhase("betting");
     setHand([null, null, null, null, null]);
     setHeld(new Set());
     setHandResult(null);
-    setBet((b) => clampBet(b, balance));
-    setMessage(balance < MIN_BET ? "Out of chips." : "Bet and deal to start.");
+    setBet(bet, balance);
+    setMessage(balance < min ? "Out of chips." : "Bet and deal to start.");
   };
 
   const refill = () => {
-    playTone(soundOn, 320, 0.05);
+    sfx.click();
     refillWallet();
-    setBet(INITIAL_BET);
+    setBet(20);
     setPhase("betting");
     setHand([null, null, null, null, null]);
     setHeld(new Set());
@@ -155,90 +137,82 @@ export default function VideoPoker() {
   };
 
   return (
-    <main className="shell">
-      <section className="mini-game" aria-label="Video Poker game">
-        <GameNav />
-        <header className="mini-header bj-header">
-          <div>
-            <p className="kicker">Jacks or better</p>
-            <h1>Video Poker</h1>
-          </div>
-          <div className="bj-header-actions">
-            <button
-              className={`icon-button ${soundOn ? "" : "is-muted"}`}
-              type="button"
-              onClick={() => { playTone(true, 320, 0.05); setSoundOn((s) => !s); }}
-              aria-label="Toggle sound"
-              title="Toggle sound"
-            >♪</button>
-            <RulesModal title="Video Poker">
-              <p><strong>Goal:</strong> Make the best five-card poker hand — pairs of Jacks or better pay out.</p>
-              <ul>
-                <li>Set your bet and press <strong>Deal</strong> to get five cards.</li>
-                <li><strong>Tap any cards to hold</strong> them, then press <strong>Draw</strong> to replace the rest.</li>
-                <li>Your final hand is scored on the paytable, from a <strong>pair of Jacks</strong> up to a <strong>Royal Flush</strong>.</li>
-                <li>Better hands pay much more — a flush, full house, or four of a kind are big wins.</li>
-                <li>Anything lower than a pair of Jacks pays nothing.</li>
-              </ul>
-            </RulesModal>
-          </div>
-        </header>
+    <GameShell
+      label="Video Poker game"
+      kicker="Jacks or better"
+      title="Video Poker"
+      soundOn={soundOn}
+      onToggleSound={toggle}
+      rules={
+        <>
+          <p><strong>Goal:</strong> Make the best five-card poker hand — pairs of Jacks or better pay out.</p>
+          <ul>
+            <li>Set your bet and press <strong>Deal</strong> to get five cards.</li>
+            <li><strong>Tap any cards to hold</strong> them, then press <strong>Draw</strong> to replace the rest.</li>
+            <li>Your final hand is scored on the paytable, from a <strong>pair of Jacks</strong> up to a <strong>Royal Flush</strong>.</li>
+            <li>Better hands pay much more — a flush, full house, or four of a kind are big wins.</li>
+            <li>Anything lower than a pair of Jacks pays nothing.</li>
+          </ul>
+        </>
+      }
+    >
+      <ScoreStrip
+        label="Score"
+        items={[
+          { label: "Balance", value: money(balance) },
+          { label: "Bet", value: money(bet) },
+          { label: "Hand", value: handResult ? handResult.name : "—" },
+        ]}
+      />
 
-        <section className="score-strip" aria-label="Score">
-          <div><span>Balance</span><strong>{money(balance)}</strong></div>
-          <div><span>Bet</span><strong>{money(bet)}</strong></div>
-          <div><span>Hand</span><strong>{handResult ? handResult.name : "—"}</strong></div>
-        </section>
+      <div className={`win-banner${handResult?.mult > 0 ? " is-win" : ""}`} role="status">
+        {message}
+      </div>
 
-        <div className={`win-banner${handResult?.mult > 0 ? " is-win" : ""}`} role="status">
-          {message}
-        </div>
-
-        <section className="vp-hand" aria-label="Your hand" aria-live="polite">
-          {hand.map((card, i) => (
-            <CardSlot
-              key={i}
-              card={card}
-              held={held.has(i)}
-              phase={phase}
-              onToggle={() => toggleHold(i)}
-            />
-          ))}
-        </section>
-
-        {phase === "betting" && (
-          <section className="mini-controls">
-            <button className="stepper" type="button" onClick={() => updateBet(bet - 10)} disabled={bet <= MIN_BET}>-</button>
-            <input type="range" min={MIN_BET} max={MAX_BET} step="10" value={bet} onChange={(e) => updateBet(Number(e.target.value))} aria-label="Bet amount" />
-            <button className="stepper" type="button" onClick={() => updateBet(bet + 10)} disabled={bet >= MAX_BET || bet >= balance}>+</button>
-            <button className="spin-button" type="button" onClick={deal} disabled={busy || balance < bet}>Deal</button>
-          </section>
-        )}
-
-        {phase === "dealt" && (
-          <section className="mini-controls">
-            <button className="spin-button" type="button" onClick={draw} disabled={busy} style={{ gridColumn: "1 / -1" }}>Draw</button>
-          </section>
-        )}
-
-        {phase === "drawn" && (
-          <section className="mini-controls">
-            {balance < MIN_BET
-              ? <button className="spin-button" type="button" onClick={refill} style={{ gridColumn: "1 / -1" }}>Refill chips</button>
-              : <button className="spin-button" type="button" onClick={nextHand} style={{ gridColumn: "1 / -1" }}>Next hand</button>
-            }
-          </section>
-        )}
-
-        <section className="paytable vp-paytable" aria-label="Pay table">
-          {HAND_RANKS.filter((h) => h.mult > 0).map((h) => (
-            <div key={h.name} className={handResult?.name === h.name ? "is-hit" : ""}>
-              <span>{h.name}</span>
-              <strong>{h.mult}x</strong>
-            </div>
-          ))}
-        </section>
+      <section className="vp-hand" aria-label="Your hand" aria-live="polite">
+        {hand.map((card, i) => (
+          <CardSlot
+            key={i}
+            card={card}
+            held={held.has(i)}
+            phase={phase}
+            onToggle={() => toggleHold(i)}
+          />
+        ))}
       </section>
-    </main>
+
+      {phase === "betting" && (
+        <section className="mini-controls">
+          <button className="stepper" type="button" onClick={decrease} disabled={atMin}>-</button>
+          <input type="range" min={min} max={max} step="10" value={bet} onChange={(e) => setBet(Number(e.target.value))} aria-label="Bet amount" />
+          <button className="stepper" type="button" onClick={increase} disabled={atMax}>+</button>
+          <button className="spin-button" type="button" onClick={deal} disabled={busy || balance < bet}>Deal</button>
+        </section>
+      )}
+
+      {phase === "dealt" && (
+        <section className="mini-controls">
+          <button className="spin-button" type="button" onClick={draw} disabled={busy} style={{ gridColumn: "1 / -1" }}>Draw</button>
+        </section>
+      )}
+
+      {phase === "drawn" && (
+        <section className="mini-controls">
+          {balance < min
+            ? <button className="spin-button" type="button" onClick={refill} style={{ gridColumn: "1 / -1" }}>Refill chips</button>
+            : <button className="spin-button" type="button" onClick={nextHand} style={{ gridColumn: "1 / -1" }}>Next hand</button>
+          }
+        </section>
+      )}
+
+      <section className="paytable vp-paytable" aria-label="Pay table">
+        {HAND_RANKS.filter((h) => h.mult > 0).map((h) => (
+          <div key={h.name} className={handResult?.name === h.name ? "is-hit" : ""}>
+            <span>{h.name}</span>
+            <strong>{h.mult}x</strong>
+          </div>
+        ))}
+      </section>
+    </GameShell>
   );
 }
