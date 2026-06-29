@@ -1,0 +1,14 @@
+# Normalize line endings: store text as LF in the repo, check out native.
+* text=auto eol=lf
+
+# Treat these as binary so they're never line-ending-normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.aab binary
+*.apk binary
+*.keystore binary
+*.jks binary

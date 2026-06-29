@@ -97,6 +97,17 @@ h2 {
   padding: clamp(18px, 4vw, 42px);
 }
 
+/* Shown briefly while a lazily-loaded game/page chunk is fetched. */
+.route-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: #a3a9c9;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
 .platform-hero {
   min-height: 34vh;
   display: grid;

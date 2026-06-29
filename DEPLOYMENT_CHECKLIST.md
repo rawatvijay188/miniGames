@@ -44,7 +44,7 @@
 
 | # | Task | Owner | Priority | Status |
 |---|------|-------|----------|--------|
-| 4.1 | **Code-split** the 637 kB JS bundle (lazy-load games) | 🤖 | P3 | ☐ |
+| 4.1 | **Code-split** the JS bundle (lazy-load games) — main chunk 637 kB → 206 kB | 🤖 | P3 | ☑ |
 | 4.2 | Test on a **real low-end Android** device | 👤 | P3 | ☐ |
 | 4.3 | Run `npm run cap:sync` and smoke-test the **Android build** | 🤝 | P3 | ☐ |
 
