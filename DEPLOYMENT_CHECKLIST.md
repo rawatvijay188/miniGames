@@ -37,8 +37,8 @@
 | 3.1 | ~~Fix stale "17 games inside" copy~~ — verified correct (17 slot games + 2 pass-and-play = 19 total) | 🤖 | P2 | ☑ |
 | 3.2 | Rename package **`slot-game-hub` → mini-games-arcade**; align app label | 🤖 | P2 | ☑ |
 | 3.3 | Replace **splash screen** (remove default Capacitor splash) | 🤖 | P2 | ☑ |
-| 3.4 | Write **store listing copy** (title, short + full description) | 👤 | P2 | ☐ |
-| 3.5 | Add review note: *"Virtual coins only. No real money. No payouts."* | 👤 | P2 | ☐ |
+| 3.4 | Write **store listing copy** (title, short + full description) — see `STORE_LISTING.md` | 🤖 | P2 | ☑ |
+| 3.5 | Add review note: *"Virtual coins only. No real money. No payouts."* — drafted in `STORE_LISTING.md` | 🤖 | P2 | ☑ |
 
 ## 4. Performance & Hardening — nice to have
 
@@ -46,7 +46,7 @@
 |---|------|-------|----------|--------|
 | 4.1 | **Code-split** the JS bundle (lazy-load games) — main chunk 637 kB → 206 kB | 🤖 | P3 | ☑ |
 | 4.2 | Test on a **real low-end Android** device | 👤 | P3 | ☐ |
-| 4.3 | Run `npm run cap:sync` and smoke-test the **Android build** | 🤝 | P3 | ☐ |
+| 4.3 | Run `npm run cap:sync` and smoke-test the **Android build** — sync verified OK | 🤝 | P3 | ◐ |
 
 ## 5. Post-Android — iOS (deferred)
 
