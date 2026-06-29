@@ -1,10 +1,11 @@
-// Generates all launcher icons + store assets from the SVG sources in assets/.
-// Run with:  node scripts/generate-icons.mjs
+// Generates all launcher icons, splash screens, and store assets from the SVG
+// sources in assets/.  Run with:  node scripts/generate-icons.mjs
 //
 // Outputs:
 //   - android/app/src/main/res/mipmap-*/ic_launcher.png         (legacy square)
 //   - android/app/src/main/res/mipmap-*/ic_launcher_round.png   (legacy round)
 //   - android/app/src/main/res/mipmap-*/ic_launcher_foreground.png (adaptive)
+//   - android/app/src/main/res/drawable*/splash.png             (launch splash)
 //   - public/icon-512.png      (Play Store listing icon)
 //   - public/icon-1024.png     (master / iOS later)
 //   - public/feature-graphic.png (1024x500 Play Store feature graphic)
@@ -54,6 +55,36 @@ async function roundIcon(size) {
     .toBuffer();
 }
 
+// Dark arcade gradient background sized to an arbitrary (non-square) canvas.
+function splashBg(w, h) {
+  const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1c1147"/>
+        <stop offset="1" stop-color="#0b0d1a"/>
+      </linearGradient>
+      <radialGradient id="r" cx="0.5" cy="0.5" r="0.6">
+        <stop offset="0" stop-color="#3a2480" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#3a2480" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="${w}" height="${h}" fill="url(#g)"/>
+    <rect width="${w}" height="${h}" fill="url(#r)"/>
+  </svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+// Splash = gradient background with the logo mark centered, sized relative to
+// the shorter edge so it reads well in both portrait and landscape.
+async function splash(w, h) {
+  const logoPx = Math.round(Math.min(w, h) * 0.6);
+  const [bg, logo] = await Promise.all([splashBg(w, h), render(fgSvg, logoPx)]);
+  return sharp(bg)
+    .composite([{ input: logo, gravity: "center" }])
+    .png()
+    .toBuffer();
+}
+
 async function write(path, buf) {
   mkdirSync(dirname(A(path)), { recursive: true });
   const { writeFileSync } = await import("node:fs");
@@ -68,6 +99,26 @@ async function main() {
     await write(`${dir}/ic_launcher.png`, await composed(legacyPx));
     await write(`${dir}/ic_launcher_round.png`, await roundIcon(legacyPx));
     await write(`${dir}/ic_launcher_foreground.png`, await render(fgSvg, fgPx));
+  }
+
+  console.log("Generating splash screens…");
+  // [folder, width, height] — Capacitor's portrait/landscape density buckets.
+  const SPLASH = [
+    ["drawable", 480, 320],
+    ["drawable-v24", 480, 320],
+    ["drawable-port-mdpi", 320, 480],
+    ["drawable-port-hdpi", 480, 800],
+    ["drawable-port-xhdpi", 720, 1280],
+    ["drawable-port-xxhdpi", 960, 1600],
+    ["drawable-port-xxxhdpi", 1280, 1920],
+    ["drawable-land-mdpi", 480, 320],
+    ["drawable-land-hdpi", 800, 480],
+    ["drawable-land-xhdpi", 1280, 720],
+    ["drawable-land-xxhdpi", 1600, 960],
+    ["drawable-land-xxxhdpi", 1920, 1280],
+  ];
+  for (const [folder, w, h] of SPLASH) {
+    await write(`android/app/src/main/res/${folder}/splash.png`, await splash(w, h));
   }
 
   console.log("Generating store assets…");
