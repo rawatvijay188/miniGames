@@ -29,19 +29,19 @@ export const FRUITS = [
   }
 ];
 
-function weightedFruit() {
+function weightedFruit(rng = Math.random) {
   const pool = [];
   for (const fruit of FRUITS) {
     const weight = Math.max(2, 10 - fruit.value);
     for (let i = 0; i < weight; i += 1) pool.push(fruit);
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 // Grid is rows x cols (row-major) for easy neighbour math.
-export function randomGrid() {
+export function randomGrid(rng = Math.random) {
   return Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, weightedFruit)
+    Array.from({ length: COLS }, () => weightedFruit(rng))
   );
 }
 
@@ -89,7 +89,7 @@ export function clusterPayout(clusters, betUnit) {
 }
 
 // Removes clustered cells, drops survivors down each column, refills the top.
-export function collapse(grid, clusters) {
+export function collapse(grid, clusters, rng = Math.random) {
   const remove = new Set();
   for (const cluster of clusters) {
     for (const [r, c] of cluster.cells) remove.add(`${r}-${c}`);
@@ -103,7 +103,7 @@ export function collapse(grid, clusters) {
     }
     // survivors are bottom-up; fill column from bottom.
     for (let r = ROWS - 1, i = 0; r >= 0; r -= 1, i += 1) {
-      next[r][c] = i < survivors.length ? survivors[i] : weightedFruit();
+      next[r][c] = i < survivors.length ? survivors[i] : weightedFruit(rng);
     }
   }
   return next;

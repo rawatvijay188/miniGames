@@ -29,20 +29,20 @@ export const SYMBOLS = [
   }
 ];
 
-function weightedSymbol() {
+function weightedSymbol(rng = Math.random) {
   // Higher-value symbols appear less often.
   const pool = [];
   for (const symbol of SYMBOLS) {
     const weight = Math.max(2, 12 - symbol.value);
     for (let i = 0; i < weight; i += 1) pool.push(symbol);
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 // Grid is an array of columns; each column is an array of symbols, top -> bottom.
-export function randomGrid() {
+export function randomGrid(rng = Math.random) {
   return Array.from({ length: COLS }, () =>
-    Array.from({ length: ROWS }, weightedSymbol)
+    Array.from({ length: ROWS }, () => weightedSymbol(rng))
   );
 }
 
@@ -70,12 +70,12 @@ export function countMatches(grid, ids) {
 }
 
 // Removes winning symbols, drops survivors down, refills the top with new symbols.
-export function collapse(grid, winningIds) {
+export function collapse(grid, winningIds, rng = Math.random) {
   const idSet = new Set(winningIds);
   return grid.map((col) => {
     const survivors = col.filter((symbol) => !idSet.has(symbol.id));
     const missing = ROWS - survivors.length;
-    const fresh = Array.from({ length: missing }, weightedSymbol);
+    const fresh = Array.from({ length: missing }, () => weightedSymbol(rng));
     return [...fresh, ...survivors];
   });
 }

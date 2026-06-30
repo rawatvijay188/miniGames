@@ -33,7 +33,7 @@ export const WILD = {
   svg: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gs-wi" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#a0f8ff"/><stop offset="45%" stop-color="#49d7df"/><stop offset="100%" stop-color="#0a5060"/></linearGradient><linearGradient id="gs-wi2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.5"/><stop offset="100%" stop-color="#49d7df" stop-opacity="0"/></linearGradient></defs><polygon points="50,8 84,42 50,92 16,42" fill="url(#gs-wi)" stroke="#a0f8ff" stroke-width="1.5"/><polygon points="50,8 84,42 50,92 16,42" fill="url(#gs-wi2)"/><line x1="16" y1="42" x2="84" y2="42" stroke="#a0f8ff" stroke-width="1" opacity="0.7"/><line x1="50" y1="8" x2="16" y2="42" stroke="#fff" stroke-width="0.8" opacity="0.4"/><line x1="50" y1="8" x2="84" y2="42" stroke="#fff" stroke-width="0.8" opacity="0.4"/><ellipse cx="40" cy="26" rx="9" ry="4" fill="#fff" opacity="0.45" transform="rotate(-25,40,26)"/><text x="50" y="62" text-anchor="middle" fill="#0b1a1c" font-size="12" font-weight="900" font-family="sans-serif">WILD</text></svg>'
 };
 
-function weightedGem() {
+function weightedGem(rng = Math.random) {
   const pool = [];
   for (const gem of GEMS) {
     const weight = Math.max(2, 10 - gem.value);
@@ -41,13 +41,13 @@ function weightedGem() {
   }
   // Wild appears occasionally.
   pool.push(WILD, WILD, WILD);
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 // Grid is reels (columns); each column has ROWS symbols.
-export function randomGrid() {
+export function randomGrid(rng = Math.random) {
   return Array.from({ length: REELS }, () =>
-    Array.from({ length: ROWS }, weightedGem)
+    Array.from({ length: ROWS }, () => weightedGem(rng))
   );
 }
 
