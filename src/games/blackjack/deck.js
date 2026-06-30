@@ -20,10 +20,12 @@ export function buildDeck() {
   return deck;
 }
 
-export function shuffle(deck) {
+// `rng` defaults to Math.random; tests inject a seeded generator (see the GDK
+// rng helpers) so a shuffled deck is deterministically verifiable.
+export function shuffle(deck, rng = Math.random) {
   const cards = [...deck];
   for (let i = cards.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [cards[i], cards[j]] = [cards[j], cards[i]];
   }
   return cards;

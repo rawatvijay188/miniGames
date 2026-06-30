@@ -7,18 +7,18 @@ export const SYMBOLS = [
   { id: "lemon",    emoji: "🍋", mult: 1  },
 ];
 
-function weightedSymbol() {
+function weightedSymbol(rng = Math.random) {
   const pool = [];
   for (const s of SYMBOLS) {
     const weight = Math.max(1, Math.floor(60 / s.mult));
     for (let i = 0; i < weight; i += 1) pool.push(s);
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 // Returns a flat array of 9 symbols (3×3, row-major).
-export function generateCard() {
-  return Array.from({ length: 9 }, weightedSymbol);
+export function generateCard(rng = Math.random) {
+  return Array.from({ length: 9 }, () => weightedSymbol(rng));
 }
 
 // Returns { totalMult, winRows: Set<rowIndex> }.

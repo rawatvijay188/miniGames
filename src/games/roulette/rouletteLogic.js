@@ -16,8 +16,9 @@ export const OUTSIDE_BETS = [
   { id: "high",  label: "19–36", theme: "neutral" },
 ];
 
-export function spinWheel() {
-  return Math.floor(Math.random() * 37);
+// `rng` defaults to Math.random; tests inject a seeded generator.
+export function spinWheel(rng = Math.random) {
+  return Math.floor(rng() * 37);
 }
 
 // Returns multiplier applied to bet: 35 for straight-up hit, 1 for outside hit, -1 for loss.

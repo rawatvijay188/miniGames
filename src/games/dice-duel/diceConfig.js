@@ -25,8 +25,9 @@ export const rotations = {
   6: "rotateX(90deg)"
 };
 
-export function rollDie() {
-  return Math.floor(Math.random() * 6) + 1;
+// `rng` defaults to Math.random; tests inject a seeded generator.
+export function rollDie(rng = Math.random) {
+  return Math.floor(rng() * 6) + 1;
 }
 
 export function randomSpin() {

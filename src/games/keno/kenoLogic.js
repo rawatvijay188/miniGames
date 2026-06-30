@@ -16,10 +16,12 @@ export const PAY_TABLE = {
   8: [[8, 10000], [7, 500], [6, 80], [5, 15], [4, 4], [3, 1]],
 };
 
-export function drawNumbers() {
+// `rng` defaults to Math.random; tests inject a seeded generator for
+// deterministic draws.
+export function drawNumbers(rng = Math.random) {
   const pool = [...NUMBERS];
   for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool.slice(0, DRAW_COUNT);
