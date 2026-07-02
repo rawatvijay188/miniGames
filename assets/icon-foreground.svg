@@ -1,20 +1,45 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <!-- Neon 2x2 "mini games" grid. Kept inside the central adaptive-icon safe
-       zone so it survives circular / squircle masking on Android. -->
-  <!-- top-left: cyan -->
-  <circle cx="392" cy="392" r="185" fill="#5ad1ff" opacity="0.16"/>
-  <circle cx="392" cy="392" r="120" fill="#5ad1ff"/>
-  <circle cx="360" cy="360" r="34" fill="#ffffff" opacity="0.55"/>
-  <!-- top-right: magenta -->
-  <circle cx="632" cy="392" r="185" fill="#ff5cc8" opacity="0.16"/>
-  <circle cx="632" cy="392" r="120" fill="#ff5cc8"/>
-  <circle cx="600" cy="360" r="34" fill="#ffffff" opacity="0.5"/>
-  <!-- bottom-left: gold -->
-  <circle cx="392" cy="632" r="185" fill="#ffce5a" opacity="0.16"/>
-  <circle cx="392" cy="632" r="120" fill="#ffce5a"/>
-  <circle cx="360" cy="600" r="34" fill="#ffffff" opacity="0.5"/>
-  <!-- bottom-right: mint -->
-  <circle cx="632" cy="632" r="185" fill="#5affa9" opacity="0.16"/>
-  <circle cx="632" cy="632" r="120" fill="#5affa9"/>
-  <circle cx="600" cy="600" r="34" fill="#ffffff" opacity="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <defs>
+    <linearGradient id="gold" x1="0.15" y1="0.05" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFE59A"></stop>
+      <stop offset="0.5" stop-color="#FFC94D"></stop>
+      <stop offset="1" stop-color="#F5A623"></stop>
+    </linearGradient>
+    <radialGradient id="coinFace" cx="0.38" cy="0.32" r="0.9">
+      <stop offset="0" stop-color="#2A2050"></stop>
+      <stop offset="1" stop-color="#181038"></stop>
+    </radialGradient>
+    <radialGradient id="shine" cx="0.35" cy="0.28" r="0.55">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.30"></stop>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="glowGold" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FFC94D" flood-opacity="0.55"></feDropShadow>
+    </filter>
+    <filter id="glowC" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#29E6FF" flood-opacity="0.6"></feDropShadow>
+    </filter>
+    <filter id="glowM" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#FF4FD8" flood-opacity="0.6"></feDropShadow>
+    </filter>
+  </defs>
+
+  <!-- Coin (hero) -->
+  <g filter="url(#glowGold)">
+    <circle cx="256" cy="256" r="132" fill="url(#coinFace)" stroke="url(#gold)" stroke-width="26"></circle>
+    <circle cx="256" cy="256" r="98" fill="none" stroke="#FFD46B" stroke-width="5" opacity="0.85"></circle>
+    <!-- 4-point sparkle star, centred -->
+    <path d="M256 146 L285.7 226.3 L366 256 L285.7 285.7 L256 366 L226.3 285.7 L146 256 L226.3 226.3 Z" fill="url(#gold)"></path>
+  </g>
+  <!-- Soft top-left shine on the coin face -->
+  <circle cx="256" cy="256" r="132" fill="url(#shine)"></circle>
+
+  <!-- Neon accent sparkles -->
+  <g filter="url(#glowC)">
+    <path d="M392 92 L399 111 L418 118 L399 125 L392 144 L385 125 L366 118 L385 111 Z" fill="#29E6FF"></path>
+  </g>
+  <g filter="url(#glowM)">
+    <path d="M128 374 L133.7 388.3 L148 394 L133.7 399.7 L128 414 L122.3 399.7 L108 394 L122.3 388.3 Z" fill="#FF4FD8"></path>
+  </g>
 </svg>

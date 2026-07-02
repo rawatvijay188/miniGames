@@ -80,7 +80,8 @@
   - `public/icon-1024.png` (master / iOS later)
   - `public/feature-graphic.png` (1024×500)
 - Adaptive-icon background color set to dark `#15123A` (was white).
-- **Status = ◐ provisional:** the art is clean and shippable, but it's a placeholder concept. Swap the SVGs and re-run `npm run icons` if you want custom art before launch. Then use `public/icon-512.png` and `public/feature-graphic.png` in the Play Console listing.
+- **Icon art (2026-07-02):** reworked to a single **gold coin hero** (embossed star + inner ring) with cyan/magenta neon accent sparkles — reads clearly at 48px and sits inside the adaptive-icon safe zone (the old 2×2 grid bled into the masked corners). Source: `assets/icon-foreground.svg`.
+- **Status = ◐ provisional:** the art is clean and shippable. Swap the SVGs and re-run `npm run icons` if you want fully custom art before launch. Then use `public/icon-512.png` and `public/feature-graphic.png` in the Play Console listing.
 
 ## Coin-Logic Tests (Task 2.1) — notes
 - Pure wallet logic extracted to `src/context/walletCore.js`; `CoinContext.jsx` is now a thin React/localStorage wrapper (public API unchanged — all games still use `useCoins()`).
